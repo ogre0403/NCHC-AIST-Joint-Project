@@ -14,6 +14,13 @@ public class IntPair implements WritableComparable<IntPair> {
     private int first = 0;
     private int second = 0;
 
+    public IntPair(int first, int second){
+        this.first = first;
+        this.second = second;
+    }
+
+    public IntPair(){}
+
     /**
      * Set the left and right values.
      */

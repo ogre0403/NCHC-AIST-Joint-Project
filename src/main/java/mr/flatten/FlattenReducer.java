@@ -18,7 +18,7 @@ public class FlattenReducer extends Reducer<Text,BytesWritable,Text, BytesArrayW
         Vector<BytesWritable> v = new Vector<BytesWritable>();
 
         for (BytesWritable val : values) {
-            v.add(val);
+            v.add(new BytesWritable(val.copyBytes()));
         }
         BytesWritable[] bwa = v.toArray(new BytesWritable[v.size()]);
         BytesArrayWritable result = new BytesArrayWritable(bwa);

@@ -101,8 +101,8 @@ public class FlattenTest {
 
     @Test
     public void testReducer() throws IOException {
-        String line1 = "235,23,197,99,189,218,110,67,135,6,121,185,113,104,255,216";
-        String line2 = "235,23,197,99,189,218,110,67,135,6,121,185,113,104,255,216";
+        String line1 = "1,23,197,99,189,218,110,67,135,6,121,185,113,104,255,216";
+        String line2 = "2,23,197,99,189,218,110,67,135,6,121,185,113,104,255,216";
 
         byte[] ba1 = new byte[16];
         byte[] ba2 = new byte[16];

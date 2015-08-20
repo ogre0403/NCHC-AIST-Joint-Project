@@ -75,7 +75,6 @@ public class FlattenTest {
         BytesWritable bw2 = new BytesWritable(ba2);
 
         BytesArrayWritable bwa = new BytesArrayWritable(new BytesWritable[]{bw1,bw2});
-        System.out.println(bwa);
         Assert.assertTrue(bw1.equals(bw2));
     }
 
@@ -184,7 +183,6 @@ public class FlattenTest {
         conf.set("fs.defaultFS", "file:///");
 
         File testFile = new File("src/test/resources/puf_sample.txt");
-        System.out.println(testFile.getAbsolutePath());
         Path path = new Path(testFile.getAbsoluteFile().toURI());
         FileSplit split = new FileSplit(path, 0, testFile.length(), null);
         TaskAttemptContext context = new TaskAttemptContextImpl(conf,new TaskAttemptID());

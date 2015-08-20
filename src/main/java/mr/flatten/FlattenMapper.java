@@ -1,9 +1,9 @@
 package mr.flatten;
 
-import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
+import org.apache.log4j.Logger;
 
 import java.io.IOException;
 import java.util.StringTokenizer;
@@ -12,7 +12,7 @@ import java.util.StringTokenizer;
  * Created by 1403035 on 2015/8/13.
  */
 public class FlattenMapper extends Mapper<Text, Text, Text, BytesWritable> {
-
+    private static Logger logger = Logger.getLogger(FlattenMapper.class);
     @Override
     protected void map(Text key, Text value, Context context) throws IOException, InterruptedException {
         byte[] ba = new byte[16];

@@ -27,9 +27,12 @@ import org.apache.hadoop.util.ToolRunner;
 public class PUF_Analyzer extends Configured implements Tool {
 
 
-
     public static void main(String[] args) throws  Exception{
-        int res = ToolRunner.run(new Configuration(), new PUF_Analyzer(), args);
+
+        Configuration conf = new Configuration();
+        conf.set("mapreduce.input.fileinputformat.split.maxsize","5242880");
+        conf.set("mapreduce.job.queuename","root.MR");
+        int res = ToolRunner.run(conf, new PUF_Analyzer(), args);
         System.exit(res);
 
     }
@@ -37,12 +40,7 @@ public class PUF_Analyzer extends Configured implements Tool {
     @Override
     public int run(String[] args) throws Exception {
 
-
-        Configuration conf = new Configuration();
-
-        //TODO: read queue name from CLI
-        conf.set("mapreduce.job.queuename","root.MR");
-
+        //TODO: input and output from CLI
         String flatten_input ="flatten_input/data";
         String flatten_output = "flatten_output/";
         String HD_input = flatten_output+"part-r-00000";
@@ -50,8 +48,7 @@ public class PUF_Analyzer extends Configured implements Tool {
 
         // Flatten MR job first
 
-
-        Job flattenJob = Job.getInstance(conf, "Flatten input job");
+        Job flattenJob = Job.getInstance(getConf(), "Flatten input job");
         flattenJob.setJarByClass(PUF_Analyzer.class);
         flattenJob.setMapperClass(FlattenMapper.class);
         flattenJob.setReducerClass(FlattenReducer.class);
@@ -62,7 +59,7 @@ public class PUF_Analyzer extends Configured implements Tool {
         flattenJob.setOutputKeyClass(Text.class);
         flattenJob.setOutputValueClass(BytesArrayWritable.class);
         flattenJob.setOutputFormatClass(SequenceFileOutputFormat.class);
-
+        flattenJob.setNumReduceTasks(1);
         FileInputFormat.addInputPath(flattenJob, new Path(flatten_input));
         FileOutputFormat.setOutputPath(flattenJob, new Path(flatten_output));
 
@@ -71,8 +68,7 @@ public class PUF_Analyzer extends Configured implements Tool {
 
 
         // then calculate HD MR job
-
-        Job HDJob = Job.getInstance(conf, "Hamming distance job");
+        Job HDJob = Job.getInstance(getConf(), "Hamming distance job");
         HDJob.setJarByClass(PUF_Analyzer.class);
         HDJob.setMapperClass(HDMapper.class);
         HDJob.setCombinerClass(HDCombiner.class);
@@ -83,6 +79,7 @@ public class PUF_Analyzer extends Configured implements Tool {
         HDJob.setMapOutputValueClass(IntPair.class);
         HDJob.setOutputKeyClass(Text.class);
         HDJob.setOutputValueClass(DoubleWritable.class);
+        HDJob.setNumReduceTasks(1);
 
 
         FileInputFormat.addInputPath(HDJob, new Path(HD_input));

@@ -1,8 +1,10 @@
 package mr;
 
-import mr.HD.AverageHDReducer;
-import mr.HD.HDCombiner;
-import mr.HD.HDMapper;
+import mr.reducer.AverageHDReducer;
+import mr.combiner.HDCombiner;
+import mr.mapper.HDMapper;
+import mr.type.BytesArrayWritable;
+import mr.type.IntPair;
 import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.Text;

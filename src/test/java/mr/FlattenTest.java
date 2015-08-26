@@ -1,7 +1,8 @@
 package mr;
 
-import mr.flatten.FlattenMapper;
-import mr.flatten.FlattenReducer;
+import mr.mapper.FlattenMapper;
+import mr.reducer.FlattenReducer;
+import mr.type.BytesArrayWritable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.BytesWritable;

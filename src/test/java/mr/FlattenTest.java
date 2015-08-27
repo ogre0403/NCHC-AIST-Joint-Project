@@ -19,6 +19,7 @@ import org.apache.hadoop.mrunit.mapreduce.ReduceDriver;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import util.TestTool;
 
 import java.io.File;
 import java.io.IOException;
@@ -101,81 +102,45 @@ public class FlattenTest {
 
     @Test
     public void testReducer() throws IOException {
-        String line1 = "1,23,197,99,189,218,110,67,135,6,121,185,113,104,255,216";
-        String line2 = "2,23,197,99,189,218,110,67,135,6,121,185,113,104,255,216";
-
-        byte[] ba1 = new byte[16];
-        byte[] ba2 = new byte[16];
-
-        StringTokenizer itr1 = new StringTokenizer(line1,",");
-        StringTokenizer itr2 = new StringTokenizer(line2,",");
-        Integer I;
-        int index = 0;
-        while (itr1.hasMoreTokens()) {
-            I = Integer.parseInt(itr1.nextToken());
-            ba1[index] = I.byteValue();
-            index+=1;
-        }
-
-        index = 0;
-        while (itr2.hasMoreTokens()) {
-            I = Integer.parseInt(itr2.nextToken());
-            ba2[index] = I.byteValue();
-            index+=1;
-        }
-        BytesWritable bw1 = new BytesWritable(ba1);
-        BytesWritable bw2 = new BytesWritable(ba2);
-        ArrayList<BytesWritable> values = new ArrayList<BytesWritable>();
-        values.add(bw1);
-        values.add(bw2);
+        String[] data = new String[]{
+                "1,23,197,99,189,218,110,67,135,6,121,185,113,104,255,216",
+                "2,23,197,99,189,218,110,67,135,6,121,185,113,104,255,216"
+        };
 
 
-        BytesArrayWritable bwa = new BytesArrayWritable(new BytesWritable[]{bw1,bw2});
         reducerdriver
-                .withInput(new Text("1"), values)
-                .withOutput(new Text("1"), bwa)
+                .withInput(new Text("1"), TestTool.toBytesWritableArray(data))
+                .withOutput(new Text("1"), TestTool.toBytesArrayWritable(data))
                 .runTest();
     }
 
     @Test
     public void testMR() throws IOException, InterruptedException {
 
-        String line1 = "235,23,197,99,189,218,110,67,135,6,121,185,113,104,255,216";
-        String line2 = "93,135,159,134,173,13,62,255,0,247,166,137,145,250,192,41";
-        byte[] ba1 = new byte[16];
-        byte[] ba2 = new byte[16];
+        String[] data = new String[]{
+                "235,23,197,99,189,218,110,67,135,6,121,185,113,104,255,216",
+                "93,135,159,134,173,13,62,255,0,247,166,137,145,250,192,41"
+        };
 
-        StringTokenizer itr1 = new StringTokenizer(line1,",");
-        StringTokenizer itr2 = new StringTokenizer(line2,",");
-        Integer I;
-        int index = 0;
-        while (itr1.hasMoreTokens()) {
-            I = Integer.parseInt(itr1.nextToken());
-            ba1[index] = I.byteValue();
-            index+=1;
-        }
+        String[] result1 = new String[]{
+                "235,23,197,99,189,218,110,67,135,6,121,185,113,104,255,216",
+                "235,23,197,99,189,218,110,67,135,6,121,185,113,104,255,216"
+        };
 
-        index = 0;
-        while (itr2.hasMoreTokens()) {
-            I = Integer.parseInt(itr2.nextToken());
-            ba2[index] = I.byteValue();
-            index+=1;
-        }
-        BytesWritable bw1 = new BytesWritable(ba1);
-        BytesWritable bw2 = new BytesWritable(ba2);
+        String[] result2 = new String[] {
+                "93,135,159,134,173,13,62,255,0,247,166,137,145,250,192,41",
+                "93,135,159,134,173,13,62,255,0,247,166,137,145,250,192,41"
+        };
 
-        BytesArrayWritable bwa1 = new BytesArrayWritable(new BytesWritable[]{bw1,bw1});
-        BytesArrayWritable bwa2 = new BytesArrayWritable(new BytesWritable[]{bw2,bw2});
 
         mapReduceDriver
-                .withInput(new Text("1"), new Text(line1))
-                .withInput(new Text("1"), new Text(line1))
-                .withInput(new Text("2"), new Text(line2))
-                .withInput(new Text("2"), new Text(line2))
-                .withOutput(new Text("1"),bwa1)
-                .withOutput(new Text("2"),bwa2)
+                .withInput(new Text("1"), new Text(data[0]))
+                .withInput(new Text("1"), new Text(data[0]))
+                .withInput(new Text("2"), new Text(data[1]))
+                .withInput(new Text("2"), new Text(data[1]))
+                .withOutput(new Text("1"),TestTool.toBytesArrayWritable(result1))
+                .withOutput(new Text("2"),TestTool.toBytesArrayWritable(result2))
                 .runTest();
-
 
         }
 

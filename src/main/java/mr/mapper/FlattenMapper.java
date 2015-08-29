@@ -21,7 +21,7 @@ public class FlattenMapper extends Mapper<Text, Text, Text, BytesWritable> {
         int index = 0;
         Integer I;
         while (itr.hasMoreTokens()) {
-            I = Integer.parseInt(itr.nextToken());
+            I = Integer.parseInt(itr.nextToken().trim());
             ba[index] = I.byteValue();
             index+=1;
         }

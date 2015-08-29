@@ -4,10 +4,7 @@ import mr.type.BytesArrayWritable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.ByteWritable;
-import org.apache.hadoop.io.BytesWritable;
-import org.apache.hadoop.io.SequenceFile;
-import org.apache.hadoop.io.Text;
+import org.apache.hadoop.io.*;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -44,7 +41,7 @@ public class TestTool {
 
     }
 
-    public static BytesWritable toBytesWritable(String data){
+    public static byte[] toByteArray(String data){
         byte[] ba1 = new byte[16];
         StringTokenizer itr1 = new StringTokenizer(data,",");
         Integer I;
@@ -54,9 +51,12 @@ public class TestTool {
             ba1[index] = I.byteValue();
             index+=1;
         }
+        return ba1;
+    }
 
-        return new BytesWritable(ba1);
 
+    public static BytesWritable toBytesWritable(String data){
+        return new BytesWritable(toByteArray(data));
     }
 
 
@@ -80,5 +80,20 @@ public class TestTool {
         }
 
         return result;
+    }
+
+    public static IntWritable[] toBinaryIntArray(byte[] bs){
+        IntWritable[] result = new IntWritable[bs.length*8];
+        for(int i = 0;i<result.length;i++)
+            result[i] = new IntWritable(0);
+
+        for(int j = 0;j<bs.length;j++){
+            for(int i = 0; i < 8; i++) {
+                if(((0x80 >>> i) & bs[j]) > 0 ){
+                    result[j*8+i].set(1);
+                }
+            }
+        }
+        return  result;
     }
 }

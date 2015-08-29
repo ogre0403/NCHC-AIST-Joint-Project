@@ -2,13 +2,18 @@ package mr;
 
 import junit.framework.Assert;
 import mr.combiner.CorrectIDCombiner;
+import mr.mapper.CorrectIDMapper;
 import mr.reducer.CorrectIDReducer;
 import mr.type.ArrayIntPair;
+import mr.type.BytesArrayWritable;
 import mr.type.IntArrayWritable;
 import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.Reducer;
+import org.apache.hadoop.mrunit.mapreduce.MapDriver;
+import org.apache.hadoop.mrunit.mapreduce.MapReduceDriver;
 import org.apache.hadoop.mrunit.mapreduce.ReduceDriver;
 import org.apache.log4j.Logger;
 import org.junit.Before;
@@ -17,6 +22,7 @@ import util.TestTool;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.LinkedList;
 
 /**
  * Created by 1403035 on 2015/8/24.
@@ -25,19 +31,37 @@ public class CorrectIDTest {
 
     private static Logger logger = Logger.getLogger(CorrectIDTest.class);
 
-    private Reducer<Text, BytesWritable,Text,ArrayIntPair> combiner;
-    private ReduceDriver<Text, BytesWritable,Text,ArrayIntPair> combindriver;
+    private Mapper<Text, Text, Text, ArrayIntPair> mapper;
+    private MapDriver<Text, Text, Text, ArrayIntPair> mapperDriver;
+
+    private Reducer<Text, ArrayIntPair,Text,ArrayIntPair> combiner;
+    private ReduceDriver<Text, ArrayIntPair,Text,ArrayIntPair> combindriver;
 
     private Reducer<Text, ArrayIntPair,Text, BytesWritable> reducer;
     private ReduceDriver<Text, ArrayIntPair,Text, BytesWritable> reducerdriver;
 
+    private MapReduceDriver<Text, Text, Text, ArrayIntPair, Text, BytesWritable> mapReduceDriver;
+
+    String[] data = new String[]{
+            "1,0,0,128,0  ,0  ,0,0,0,0,0,0,0,0,0,0"
+            ,"1,1,0,128,128,0  ,0,0,0,0,0,0,0,0,0,0"
+            ,"1,1,1,128,128,128,0,0,0,0,0,0,0,0,0,0",
+    };
+
     @Before
     public void init() {
+
+        mapper = new CorrectIDMapper();
+        mapperDriver = new MapDriver<Text,Text,Text,ArrayIntPair>(mapper);
+
         combiner = new CorrectIDCombiner();
-        combindriver = new ReduceDriver<Text, BytesWritable,Text,ArrayIntPair>(combiner);
+        combindriver = new ReduceDriver<Text, ArrayIntPair,Text,ArrayIntPair>(combiner);
 
         reducer = new CorrectIDReducer();
         reducerdriver = new ReduceDriver<Text, ArrayIntPair, Text, BytesWritable>(reducer);
+
+        mapReduceDriver = new MapReduceDriver<Text, Text, Text, ArrayIntPair, Text, BytesWritable>(mapper,reducer);
+        mapReduceDriver.setCombiner(combiner);
     }
 
 
@@ -113,13 +137,31 @@ public class CorrectIDTest {
     }
 
     @Test
+    public void testMapper() throws IOException {
+
+        IntWritable[] result1 = TestTool.toBinaryIntArray(
+                TestTool.toByteArray(data[0])
+        );
+        IntWritable[] result2 = TestTool.toBinaryIntArray(
+                TestTool.toByteArray(data[1])
+        );
+        IntWritable[] result3 = TestTool.toBinaryIntArray(
+                TestTool.toByteArray(data[2])
+        );
+
+        mapperDriver
+                .withInput(new Text("1"), new Text(data[0]))
+                .withInput(new Text("1"), new Text(data[1]))
+                .withInput(new Text("1"), new Text(data[2]))
+                .withOutput(new Text("1"), new ArrayIntPair(new IntArrayWritable(result1), new IntWritable(1)))
+                .withOutput(new Text("1"), new ArrayIntPair(new IntArrayWritable(result2), new IntWritable(1)))
+                .withOutput(new Text("1"), new ArrayIntPair(new IntArrayWritable(result3), new IntWritable(1)))
+                        .runTest();
+    }
+
+    @Test
     public void testCombiner() throws IOException {
 
-        String[] data = new String[]{
-                 "1,0,0,128,0  ,0  ,0,0,0,0,0,0,0,0,0,0"
-                ,"1,1,0,128,128,0  ,0,0,0,0,0,0,0,0,0,0"
-                ,"1,1,1,128,128,128,0,0,0,0,0,0,0,0,0,0",
-        };
 
         IntWritable[] vote = new IntWritable[128];
         for(int i = 0;i<vote.length;i++)
@@ -132,8 +174,23 @@ public class CorrectIDTest {
         vote[32].set(2);
         vote[40].set(1);
 
+        LinkedList<ArrayIntPair> input = new LinkedList<ArrayIntPair>();
+        IntWritable[] result1 = TestTool.toBinaryIntArray(
+                TestTool.toByteArray(data[0])
+        );
+        IntWritable[] result2 = TestTool.toBinaryIntArray(
+                TestTool.toByteArray(data[1])
+        );
+        IntWritable[] result3 = TestTool.toBinaryIntArray(
+                TestTool.toByteArray(data[2])
+        );
 
-        combindriver.withInput(new Text("1"), TestTool.toBytesWritableArray(data))
+        input.add(new ArrayIntPair(new IntArrayWritable(result1), new IntWritable(1)));
+        input.add(new ArrayIntPair(new IntArrayWritable(result2), new IntWritable(1)));
+        input.add(new ArrayIntPair(new IntArrayWritable(result3), new IntWritable(1)));
+
+
+        combindriver.withInput(new Text("1"), input)
                 .withOutput(new Text("1"), new ArrayIntPair(new IntArrayWritable(vote), new IntWritable(3)))
                 .runTest();
     }
@@ -168,6 +225,27 @@ public class CorrectIDTest {
 
 
         reducerdriver.withInput(new Text("1"),values)
+                .withOutput(new Text("1"),new BytesWritable(result))
+                .runTest();
+    }
+
+    @Test
+    public void testMR() throws IOException {
+
+
+        byte[] result = new byte[16];
+
+        result[0] = (byte) 1;
+        result[1] = (byte)1;
+        result[2] = (byte) 0;
+        result[3] = (byte) 128;
+        result[4] = (byte) 128;
+        result[5] = (byte) 0;
+
+        mapReduceDriver
+                .withInput(new Text("1"), new Text(data[0]))
+                .withInput(new Text("1"), new Text(data[1]))
+                .withInput(new Text("1"), new Text(data[2]))
                 .withOutput(new Text("1"),new BytesWritable(result))
                 .runTest();
     }

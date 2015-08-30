@@ -42,7 +42,7 @@ public class IntraHD_2 extends Configured implements Tool {
         String correct_output = "correctid_output/";
         String HD_input = flatten_output+"part-r-00000";
         String HD_output = "HD_output/";
-        String cache = correct_input;
+        String cache = correct_output+"part-r-00000";
 
         Job flattenJob = Job.getInstance(getConf(), "Flatten input job");
         flattenJob.setJarByClass(IntraHD_2.class);
@@ -95,11 +95,9 @@ public class IntraHD_2 extends Configured implements Tool {
         HDJob.setMapOutputKeyClass(IntWritable.class);
         HDJob.setMapOutputValueClass(IntPair.class);
 
-
         HDJob.setOutputKeyClass(IntWritable.class);
         HDJob.setOutputValueClass(DoubleWritable.class);
         HDJob.setNumReduceTasks(1);
-//        DistributedCache.addCacheFile(new URI(cache), getConf());
         HDJob.addCacheFile(new URI(cache));
 
         FileInputFormat.addInputPath(HDJob, new Path(HD_input));

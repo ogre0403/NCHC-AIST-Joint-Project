@@ -29,7 +29,7 @@ public class HDwithCorrectIDMapper extends Mapper<Text, BytesArrayWritable,IntWr
         super.setup(context);
         Configuration conf = context.getConfiguration();
         Path[] cacheFiles = context.getLocalCacheFiles();
-        FileSystem fs = FileSystem.get(conf);
+        LocalFileSystem fs = FileSystem.getLocal(conf);
         SequenceFile.Reader reader = new SequenceFile.Reader(fs, cacheFiles[0], conf);
 
         Writable key = (Writable) ReflectionUtils.newInstance(reader.getKeyClass(), conf);

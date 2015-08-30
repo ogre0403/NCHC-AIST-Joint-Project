@@ -10,9 +10,9 @@ public class Main {
     public static void main(String[] args) throws Exception {
 
         Configuration conf = new Configuration();
-//        conf.set("mapreduce.input.fileinputformat.split.maxsize","5242880");
-//        conf.set("mapreduce.job.queuename","root.MR");
-        int res = ToolRunner.run(conf, new IntraHD_2(), args);
+        conf.set("mapreduce.input.fileinputformat.split.maxsize","5242880");
+        conf.set("mapreduce.job.queuename","root.MR");
+        int res = ToolRunner.run(conf, new IntraHD_1(), args);
         System.exit(res);
 
     }

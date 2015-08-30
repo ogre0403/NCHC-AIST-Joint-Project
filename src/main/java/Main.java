@@ -1,4 +1,5 @@
 import mr.job.IntraHD_1;
+import mr.job.IntraHD_2;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.util.ToolRunner;
 
@@ -9,9 +10,9 @@ public class Main {
     public static void main(String[] args) throws Exception {
 
         Configuration conf = new Configuration();
-        conf.set("mapreduce.input.fileinputformat.split.maxsize","5242880");
-        conf.set("mapreduce.job.queuename","root.MR");
-        int res = ToolRunner.run(conf, new IntraHD_1(), args);
+//        conf.set("mapreduce.input.fileinputformat.split.maxsize","5242880");
+//        conf.set("mapreduce.job.queuename","root.MR");
+        int res = ToolRunner.run(conf, new IntraHD_2(), args);
         System.exit(res);
 
     }

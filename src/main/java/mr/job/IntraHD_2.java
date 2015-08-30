@@ -42,7 +42,7 @@ public class IntraHD_2 extends Configured implements Tool {
         String correct_output = "correctid_output/";
         String HD_input = flatten_output+"part-r-00000";
         String HD_output = "HD_output/";
-        String cache = correct_input + "part-r-00000";
+        String cache = correct_input;
 
         Job flattenJob = Job.getInstance(getConf(), "Flatten input job");
         flattenJob.setJarByClass(IntraHD_2.class);

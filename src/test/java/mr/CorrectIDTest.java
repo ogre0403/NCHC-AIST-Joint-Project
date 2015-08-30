@@ -31,8 +31,8 @@ public class CorrectIDTest {
 
     private static Logger logger = Logger.getLogger(CorrectIDTest.class);
 
-    private Mapper<Text, Text, Text, ArrayIntPair> mapper;
-    private MapDriver<Text, Text, Text, ArrayIntPair> mapperDriver;
+    private Mapper<Text, BytesArrayWritable, Text, ArrayIntPair> mapper;
+    private MapDriver<Text, BytesArrayWritable, Text, ArrayIntPair> mapperDriver;
 
     private Reducer<Text, ArrayIntPair,Text,ArrayIntPair> combiner;
     private ReduceDriver<Text, ArrayIntPair,Text,ArrayIntPair> combindriver;
@@ -40,7 +40,7 @@ public class CorrectIDTest {
     private Reducer<Text, ArrayIntPair,Text, BytesWritable> reducer;
     private ReduceDriver<Text, ArrayIntPair,Text, BytesWritable> reducerdriver;
 
-    private MapReduceDriver<Text, Text, Text, ArrayIntPair, Text, BytesWritable> mapReduceDriver;
+    private MapReduceDriver<Text, BytesArrayWritable, Text, ArrayIntPair, Text, BytesWritable> mapReduceDriver;
 
     String[] data = new String[]{
             "1,0,0,128,0  ,0  ,0,0,0,0,0,0,0,0,0,0"
@@ -52,7 +52,7 @@ public class CorrectIDTest {
     public void init() {
 
         mapper = new CorrectIDMapper();
-        mapperDriver = new MapDriver<Text,Text,Text,ArrayIntPair>(mapper);
+        mapperDriver = new MapDriver<Text,BytesArrayWritable,Text,ArrayIntPair>(mapper);
 
         combiner = new CorrectIDCombiner();
         combindriver = new ReduceDriver<Text, ArrayIntPair,Text,ArrayIntPair>(combiner);
@@ -60,7 +60,7 @@ public class CorrectIDTest {
         reducer = new CorrectIDReducer();
         reducerdriver = new ReduceDriver<Text, ArrayIntPair, Text, BytesWritable>(reducer);
 
-        mapReduceDriver = new MapReduceDriver<Text, Text, Text, ArrayIntPair, Text, BytesWritable>(mapper,reducer);
+        mapReduceDriver = new MapReduceDriver<Text, BytesArrayWritable, Text, ArrayIntPair, Text, BytesWritable>(mapper,reducer);
         mapReduceDriver.setCombiner(combiner);
     }
 
@@ -139,20 +139,42 @@ public class CorrectIDTest {
     @Test
     public void testMapper() throws IOException {
 
-        IntWritable[] result1 = TestTool.toBinaryIntArray(
-                TestTool.toByteArray(data[0])
-        );
-        IntWritable[] result2 = TestTool.toBinaryIntArray(
-                TestTool.toByteArray(data[1])
-        );
-        IntWritable[] result3 = TestTool.toBinaryIntArray(
-                TestTool.toByteArray(data[2])
-        );
+
+        BytesArrayWritable input = TestTool.toBytesArrayWritable(data);
+
+        IntWritable[] result1 = new IntWritable[128];
+        IntWritable[] result2 = new IntWritable[128];
+        IntWritable[] result3 = new IntWritable[128];
+
+
+        //"1,0,0,128,0  ,0  ,0,0,0,0,0,0,0,0,0,0"
+        for(int i = 0;i<result1.length;i++)
+            result1[i] = new IntWritable(0);
+
+        result1[7].set(1);
+        result1[24].set(1);
+
+        for(int i = 0;i<result2.length;i++)
+            result2[i] = new IntWritable(0);
+
+        result2[7].set(1);
+        result2[15].set(1);
+        result2[24].set(1);
+        result2[32].set(1);
+
+        for(int i = 0;i<result3.length;i++)
+            result3[i] = new IntWritable(0);
+
+        result3[7].set(1);
+        result3[15].set(1);
+        result3[23].set(1);
+        result3[24].set(1);
+        result3[32].set(1);
+        result3[40].set(1);
+
 
         mapperDriver
-                .withInput(new Text("1"), new Text(data[0]))
-                .withInput(new Text("1"), new Text(data[1]))
-                .withInput(new Text("1"), new Text(data[2]))
+                .withInput(new Text("1"), input)
                 .withOutput(new Text("1"), new ArrayIntPair(new IntArrayWritable(result1), new IntWritable(1)))
                 .withOutput(new Text("1"), new ArrayIntPair(new IntArrayWritable(result2), new IntWritable(1)))
                 .withOutput(new Text("1"), new ArrayIntPair(new IntArrayWritable(result3), new IntWritable(1)))
@@ -243,10 +265,8 @@ public class CorrectIDTest {
         result[5] = (byte) 0;
 
         mapReduceDriver
-                .withInput(new Text("1"), new Text(data[0]))
-                .withInput(new Text("1"), new Text(data[1]))
-                .withInput(new Text("1"), new Text(data[2]))
-                .withOutput(new Text("1"),new BytesWritable(result))
+                .withInput(new Text("1"), TestTool.toBytesArrayWritable(data))
+                .withOutput(new Text("1"), new BytesWritable(result))
                 .runTest();
     }
 }

@@ -27,14 +27,24 @@ import org.apache.hadoop.util.Tool;
  */
 public class IntraHD_1 extends Configured implements Tool {
 
+    private  Path FLATTEN_INPUT_FILE;
+    private  Path FLATTEN_OUTPUT_DIR;
+    private  Path HD_INPUT_FILE;
+    private  Path HD_OUTPUT_DIR;
+
+    public IntraHD_1(Path flatten_input_file,
+                     String flatten_output_dir,
+                     String HD_output_dir){
+        FLATTEN_INPUT_FILE = flatten_input_file;
+        FLATTEN_OUTPUT_DIR = new Path(flatten_output_dir);
+        HD_INPUT_FILE = new Path(flatten_output_dir + "/part-r-00000");
+        HD_OUTPUT_DIR = new Path(HD_output_dir);
+
+    }
+
         @Override
     public int run(String[] args) throws Exception {
 
-        //TODO: input and output from CLI
-        String flatten_input ="flatten_input/data";
-        String flatten_output = "flatten_output/";
-        String HD_input = flatten_output+"part-r-00000";
-        String HD_output = "HD_output/";
 
         // Flatten MR job first
 
@@ -50,8 +60,9 @@ public class IntraHD_1 extends Configured implements Tool {
         flattenJob.setOutputValueClass(BytesArrayWritable.class);
         flattenJob.setOutputFormatClass(SequenceFileOutputFormat.class);
         flattenJob.setNumReduceTasks(1);
-        FileInputFormat.addInputPath(flattenJob, new Path(flatten_input));
-        FileOutputFormat.setOutputPath(flattenJob, new Path(flatten_output));
+
+        FileInputFormat.addInputPath(flattenJob, FLATTEN_INPUT_FILE);
+        FileOutputFormat.setOutputPath(flattenJob, FLATTEN_OUTPUT_DIR);
 
         if (flattenJob.waitForCompletion(true) == false)
             return 1;
@@ -71,9 +82,8 @@ public class IntraHD_1 extends Configured implements Tool {
         HDJob.setOutputValueClass(DoubleWritable.class);
         HDJob.setNumReduceTasks(1);
 
-
-        FileInputFormat.addInputPath(HDJob, new Path(HD_input));
-        FileOutputFormat.setOutputPath(HDJob, new Path(HD_output));
+        FileInputFormat.addInputPath(HDJob, HD_INPUT_FILE);
+        FileOutputFormat.setOutputPath(HDJob, HD_OUTPUT_DIR);
 
         return HDJob.waitForCompletion(true) ? 0 : 1;
     }

@@ -6,7 +6,7 @@ import org.apache.hadoop.util.ToolRunner;
 /**
  * Created by 1403035 on 2015/8/24.
  */
-public class Main {
+public class Intra1 {
     public static void main(String[] args) throws Exception {
 
         Configuration conf = new Configuration();

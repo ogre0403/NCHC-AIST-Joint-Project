@@ -44,8 +44,9 @@ public class IntraHD_1 extends Configured implements Tool {
         @Override
     public int run(String[] args) throws Exception {
 
+        String job_id = FLATTEN_OUTPUT_DIR.getName();
         // Flatten MR job first
-        Job flattenJob = Job.getInstance(getConf(), "Flatten input job");
+        Job flattenJob = Job.getInstance(getConf(), "Flatten input job ["+job_id+"]");
         flattenJob.setJarByClass(IntraHD_1.class);
         flattenJob.setMapperClass(FlattenMapper.class);
         flattenJob.setReducerClass(FlattenReducer.class);
@@ -65,7 +66,7 @@ public class IntraHD_1 extends Configured implements Tool {
             return 1;
 
         // then calculate HD MR job
-        Job HDJob = Job.getInstance(getConf(), "Hamming distance job");
+        Job HDJob = Job.getInstance(getConf(), "Hamming distance job [" + job_id+"]");
         HDJob.setJarByClass(IntraHD_1.class);
         HDJob.setMapperClass(HDMapper.class);
         HDJob.setCombinerClass(HDCombiner.class);

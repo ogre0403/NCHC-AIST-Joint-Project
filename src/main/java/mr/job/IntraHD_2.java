@@ -59,9 +59,10 @@ public class IntraHD_2 extends Configured implements Tool {
 
     @Override
     public int run(String[] args) throws Exception {
+        String job_id = FLATTEN_OUTPUT_DIR.getName();
 
         // Flatten MR job first
-        Job flattenJob = Job.getInstance(getConf(), "Flatten input job");
+        Job flattenJob = Job.getInstance(getConf(), "Flatten input job ["+job_id+"]");
         flattenJob.setJarByClass(IntraHD_2.class);
         flattenJob.setMapperClass(FlattenMapper.class);
         flattenJob.setReducerClass(FlattenReducer.class);
@@ -80,7 +81,7 @@ public class IntraHD_2 extends Configured implements Tool {
             return 1;
 
         // Calculat each correct ID
-        Job correctIDJob = Job.getInstance(getConf(),"CorrectIDs Job");
+        Job correctIDJob = Job.getInstance(getConf(),"CorrectIDs Job [" + job_id+ "]");
         correctIDJob.setJarByClass(IntraHD_2.class);
         correctIDJob.setMapperClass(CorrectIDMapper.class);
         correctIDJob.setReducerClass(CorrectIDReducer.class);
@@ -102,7 +103,7 @@ public class IntraHD_2 extends Configured implements Tool {
             return 1;
 
         // calculate Hamming distance using correct IDs derived in previous step
-        Job HDJob = Job.getInstance(getConf(), "Hamming distance Job with CorrectIDs");
+        Job HDJob = Job.getInstance(getConf(), "Hamming distance Job with CorrectIDs [" + job_id+"]");
         HDJob.setJarByClass(IntraHD_2.class);
         HDJob.setMapperClass(HDwithCorrectIDMapper.class);
         HDJob.setReducerClass(AverageHDReducer.class);

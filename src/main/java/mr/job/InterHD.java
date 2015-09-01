@@ -32,18 +32,26 @@ public class InterHD extends Configured implements Tool {
 
     private static Logger logger = Logger.getLogger(InterHD.class);
 
+    private Path MERGE_INPUT_DIR;
+    private Path MERGE_OUTPUT_DIR;
+    private Path HD_INPUT_FILE;
+    private Path HD_OUTPUT_DIR;
+
+    public InterHD(String merge_input_dir,
+                   String merge_output_dir,
+                   String hd_output_dir){
+        MERGE_INPUT_DIR = new Path(merge_input_dir);
+        MERGE_OUTPUT_DIR = new Path(merge_output_dir);
+        HD_INPUT_FILE = new Path(merge_output_dir + "/part-r-00000");
+        HD_OUTPUT_DIR = new Path(hd_output_dir);
+
+    }
+
     @Override
     public int run(String[] args) throws Exception {
 
-        //TODO: input and output from CLI
-
-        String merge_input_dir = "merge_input/";
-        String merge_output = "merge_output/";
-        String HD_input = merge_output+"part-r-00000";
-        String HD_output = "HD_output/";
-
         FileSystem fs = FileSystem.get(getConf());
-        FileStatus[] fileStat = fs.listStatus(new Path(merge_input_dir));
+        FileStatus[] fileStat = fs.listStatus(MERGE_INPUT_DIR);
 
 
         Job mergeJob = Job.getInstance(getConf(), "Merge CorrectIDs Job");
@@ -64,7 +72,7 @@ public class InterHD extends Configured implements Tool {
                 FileStatus[] ss = fs.listStatus(ff.getPath());
 
                 for(FileStatus fff : ss){
-                    if(fff.isFile()){
+                    if(fff.isFile() && fff.getPath().getName().equals("part-r-00000")){
                         logger.info(fff.getPath());
                         MultipleInputs.addInputPath(mergeJob, fff.getPath(),
                                 SequenceFileInputFormat.class, IdentityMapper.class);
@@ -75,7 +83,7 @@ public class InterHD extends Configured implements Tool {
 
 
 
-        FileOutputFormat.setOutputPath(mergeJob, new Path(merge_output));
+        FileOutputFormat.setOutputPath(mergeJob, MERGE_OUTPUT_DIR);
         if (mergeJob.waitForCompletion(true) == false)
             return 1;
 
@@ -94,8 +102,8 @@ public class InterHD extends Configured implements Tool {
         HDJob.setNumReduceTasks(1);
 
 
-        FileInputFormat.addInputPath(HDJob, new Path(HD_input));
-        FileOutputFormat.setOutputPath(HDJob, new Path(HD_output));
+        FileInputFormat.addInputPath(HDJob, HD_INPUT_FILE);
+        FileOutputFormat.setOutputPath(HDJob, HD_OUTPUT_DIR);
 
         return HDJob.waitForCompletion(true) ? 0 : 1;
 

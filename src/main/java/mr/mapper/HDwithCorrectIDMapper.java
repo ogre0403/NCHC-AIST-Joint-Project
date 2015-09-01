@@ -14,16 +14,17 @@ import java.io.*;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * Created by ogre0403 on 2015/8/26.
- */
 public class HDwithCorrectIDMapper extends Mapper<Text, BytesArrayWritable,IntWritable, IntPair>  {
 
     private static Logger logger = Logger.getLogger(HDwithCorrectIDMapper.class);
     private Map<Text,BytesWritable> correctIDs=new HashMap<Text,BytesWritable>();
     private final static IntPair sumAndCount = new IntPair();
 
-
+    /**
+     * read distributed cache SequenceFile with Text (KEY)
+     * and BytesWritable (VALUE) type.
+     * save distributed cache content into in-memory hashmap.
+     */
     @Override
     protected void setup(Context context) throws IOException, InterruptedException {
         super.setup(context);
@@ -39,7 +40,7 @@ public class HDwithCorrectIDMapper extends Mapper<Text, BytesArrayWritable,IntWr
 
         try {
             while (reader.next(key, value)) {
-                Text k = (Text)deepCopy(key, writableClassK); // Writable 的深度复制
+                Text k = (Text)deepCopy(key, writableClassK);
                 BytesWritable v = (BytesWritable)deepCopy(value, writableClassV);
                 correctIDs.put(k, v);
             }
@@ -54,6 +55,13 @@ public class HDwithCorrectIDMapper extends Mapper<Text, BytesArrayWritable,IntWr
 
     }
 
+    /**
+     * map() calculate Hamming Distance between each BytesWritable
+     * within BytesArrayWritable and corresponding correct IDs read
+     * from distributed cache.
+     * Then, map() emmit one <HD,1> K/V pair for calculating mean
+     * Hamming distance.
+     */
     @Override
     protected void map(Text key, BytesArrayWritable value, Context context) throws IOException, InterruptedException {
         BytesWritable[] vv = (BytesWritable[])value.toArray();
@@ -68,7 +76,9 @@ public class HDwithCorrectIDMapper extends Mapper<Text, BytesArrayWritable,IntWr
         }
     }
 
-
+    /**
+     * Clone and return object in SequenceFile
+     */
     private  Writable deepCopy(Writable source,Class<Writable> writableClass)
             throws IOException, IllegalAccessException, InstantiationException {
         ByteArrayOutputStream byteOutStream = new ByteArrayOutputStream();

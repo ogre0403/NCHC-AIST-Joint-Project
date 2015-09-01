@@ -8,7 +8,7 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 /**
- * Created by 1403035 on 2015/8/14.
+ * WritableComparable of int pair.
  */
 public class IntPair implements WritableComparable<IntPair> {
     private int first = 0;

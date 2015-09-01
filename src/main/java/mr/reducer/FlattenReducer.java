@@ -8,13 +8,15 @@ import org.apache.hadoop.mapreduce.Reducer;
 import java.io.IOException;
 import java.util.Vector;
 
-/**
- * Created by 1403035 on 2015/8/13.
- */
 public class FlattenReducer extends Reducer<Text,BytesWritable,Text, BytesArrayWritable> {
 
+    /**
+     * reduce() save each ByteWritable object within a collection
+     * into one BytesArrayWritable object.
+     */
     @Override
-    protected void reduce(Text key, Iterable<BytesWritable> values, Context context) throws IOException, InterruptedException {
+    protected void reduce(Text key, Iterable<BytesWritable> values, Context context)
+            throws IOException, InterruptedException {
         Vector<BytesWritable> v = new Vector<BytesWritable>();
 
         for (BytesWritable val : values) {

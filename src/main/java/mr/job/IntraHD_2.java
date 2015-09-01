@@ -18,7 +18,6 @@ import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
-import org.apache.hadoop.mapreduce.filecache.DistributedCache;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.KeyValueTextInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
@@ -30,7 +29,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 
 /**
- * Created by 1403035 on 2015/8/24.
+ * Driver class to launch Intra HD calculation using correct IDs.
  */
 public class IntraHD_2 extends Configured implements Tool {
 
@@ -61,6 +60,7 @@ public class IntraHD_2 extends Configured implements Tool {
     @Override
     public int run(String[] args) throws Exception {
 
+        // Flatten MR job first
         Job flattenJob = Job.getInstance(getConf(), "Flatten input job");
         flattenJob.setJarByClass(IntraHD_2.class);
         flattenJob.setMapperClass(FlattenMapper.class);
@@ -79,7 +79,7 @@ public class IntraHD_2 extends Configured implements Tool {
         if (flattenJob.waitForCompletion(true) == false)
             return 1;
 
-
+        // Calculat each correct ID
         Job correctIDJob = Job.getInstance(getConf(),"CorrectIDs Job");
         correctIDJob.setJarByClass(IntraHD_2.class);
         correctIDJob.setMapperClass(CorrectIDMapper.class);
@@ -101,7 +101,7 @@ public class IntraHD_2 extends Configured implements Tool {
         if (correctIDJob.waitForCompletion(true) == false)
             return 1;
 
-
+        // calculate Hamming distance using correct IDs derived in previous step
         Job HDJob = Job.getInstance(getConf(), "Hamming distance Job with CorrectIDs");
         HDJob.setJarByClass(IntraHD_2.class);
         HDJob.setMapperClass(HDwithCorrectIDMapper.class);

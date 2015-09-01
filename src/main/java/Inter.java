@@ -4,7 +4,7 @@ import org.apache.hadoop.util.GenericOptionsParser;
 import org.apache.hadoop.util.ToolRunner;
 
 /**
- * Created by ogre0403 on 2015/8/31.
+ * main function to launch Inter HD calculation
  */
 public class Inter {
     public static void main(String[] args) throws Exception {

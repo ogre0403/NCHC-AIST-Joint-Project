@@ -16,6 +16,13 @@ import java.io.IOException;
 public class HDMapper extends Mapper<Text, BytesArrayWritable,IntWritable, IntPair> {
 
     private final static IntPair sumAndCount = new IntPair();
+
+    /**
+     *  map() first List all combination of two BytesWritable object.
+     *  Then, for each combination, Calculate Hamming Distance between
+     *  these two BytesWritable.
+     *  map() emmit one <HD,1> K/V pair for calculating mean Hamming distance.
+     */
     @Override
     protected void map(Text key, BytesArrayWritable value, Context context) throws IOException, InterruptedException {
         BytesWritable[] vv = (BytesWritable[])value.toArray();

@@ -8,13 +8,16 @@ import org.apache.log4j.Logger;
 import java.io.IOException;
 import java.util.StringTokenizer;
 
-/**
- * Created by 1403035 on 2015/8/13.
- */
 public class FlattenMapper extends Mapper<Text, Text, Text, BytesWritable> {
     private static Logger logger = Logger.getLogger(FlattenMapper.class);
+
+    /**
+     * map() transform 16 numbers, which are separated by comma,
+     * in to byte array with length 16. Each byte save one number.
+     */
     @Override
-    protected void map(Text key, Text value, Context context) throws IOException, InterruptedException {
+    protected void map(Text key, Text value, Context context)
+            throws IOException, InterruptedException {
         byte[] ba = new byte[16];
 
         StringTokenizer itr = new StringTokenizer(value.toString(),",");

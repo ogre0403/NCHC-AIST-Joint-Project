@@ -21,9 +21,8 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 import org.apache.hadoop.util.Tool;
 
-
 /**
- * Created by 1403035 on 2015/8/13.
+ * Driver class to launch Intra HD calculation with all combinations
  */
 public class IntraHD_1 extends Configured implements Tool {
 
@@ -45,9 +44,7 @@ public class IntraHD_1 extends Configured implements Tool {
         @Override
     public int run(String[] args) throws Exception {
 
-
         // Flatten MR job first
-
         Job flattenJob = Job.getInstance(getConf(), "Flatten input job");
         flattenJob.setJarByClass(IntraHD_1.class);
         flattenJob.setMapperClass(FlattenMapper.class);
@@ -66,7 +63,6 @@ public class IntraHD_1 extends Configured implements Tool {
 
         if (flattenJob.waitForCompletion(true) == false)
             return 1;
-
 
         // then calculate HD MR job
         Job HDJob = Job.getInstance(getConf(), "Hamming distance job");

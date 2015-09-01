@@ -6,7 +6,7 @@ import org.apache.hadoop.io.BytesWritable;
 import java.util.Arrays;
 
 /**
- * Created by 1403035 on 2015/8/13.
+ * A ArrayWritable wrapper of BytesWritable[]
  */
 public class BytesArrayWritable extends ArrayWritable {
 

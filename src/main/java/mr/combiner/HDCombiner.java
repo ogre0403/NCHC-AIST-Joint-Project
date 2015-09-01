@@ -7,13 +7,14 @@ import org.apache.hadoop.mapreduce.Reducer;
 
 import java.io.IOException;
 
-/**
- * Created by 1403035 on 2015/8/14.
- */
 public class HDCombiner extends Reducer<IntWritable, IntPair,IntWritable,IntPair> {
 
     private IntPair result = new IntPair();
 
+    /**
+     * reduce() calculate partial sum of hamming distance and
+     * partial sum of number of byte pairs.
+     */
     @Override
     protected void reduce(IntWritable key, Iterable<IntPair> values, Context context) throws IOException, InterruptedException {
         int sum = 0;

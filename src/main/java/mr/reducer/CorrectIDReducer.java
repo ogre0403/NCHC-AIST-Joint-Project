@@ -9,9 +9,6 @@ import org.apache.hadoop.mapreduce.Reducer;
 
 import java.io.IOException;
 
-/**
- * Created by 1403035 on 2015/8/24.
- */
 public class CorrectIDReducer extends Reducer<Text, ArrayIntPair,Text, BytesWritable> {
     private static int[] pow_2 = new int[]{128,64,32,16,8,4,2,1};
 
@@ -33,6 +30,11 @@ public class CorrectIDReducer extends Reducer<Text, ArrayIntPair,Text, BytesWrit
         context.write(key, getCorrectID(total_vote,total));
     }
 
+    /**
+     * Get the correct ids, and get back the byte number.
+     * The value of each position in binary representation
+     * is determined by majority voting.
+     **/
     private BytesWritable getCorrectID(int[] vote,int total){
 
         byte[] result = new byte[16];

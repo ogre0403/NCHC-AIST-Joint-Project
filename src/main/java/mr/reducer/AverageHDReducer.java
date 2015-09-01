@@ -8,12 +8,15 @@ import org.apache.hadoop.mapreduce.Reducer;
 
 import java.io.IOException;
 
-/**
- * Created by 1403035 on 2015/8/13.
- */
 public class AverageHDReducer extends Reducer<IntWritable, IntPair, IntWritable, DoubleWritable>{
     private DoubleWritable result = new DoubleWritable();
 
+    /**
+     * reduce() calculate total sum of Hamming distance and
+     * total sum of number of byte pairs.
+     * reduce() emmit the average hamming distance by calculating
+     * total HD over total number of byte pairs.
+     */
     @Override
     protected void reduce(IntWritable key, Iterable<IntPair> values, Context context) throws IOException, InterruptedException {
         double sum = 0;

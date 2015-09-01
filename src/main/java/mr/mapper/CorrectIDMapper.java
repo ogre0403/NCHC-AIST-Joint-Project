@@ -12,9 +12,6 @@ import org.apache.log4j.Logger;
 import java.io.IOException;
 import java.util.StringTokenizer;
 
-/**
- * Created by 1403035 on 2015/8/24.
- */
 public class CorrectIDMapper extends Mapper<Text, BytesArrayWritable, Text, ArrayIntPair> {
     private static Logger logger = Logger.getLogger(CorrectIDMapper.class);
 
@@ -29,6 +26,13 @@ public class CorrectIDMapper extends Mapper<Text, BytesArrayWritable, Text, Arra
         }
     }
 
+    /**
+     * transform a array of byte to a array of ints.
+     * The length of int array is multiples of 8.
+     * Every 8 element is binary representation of byte value.
+     * byte[] = {(byte)1, (byte)128}
+     * int[]  = {0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0}
+     **/
     private IntWritable[] toBinaryIntArray(byte[] bs,int size){
         IntWritable[] result = new IntWritable[size*8];
 

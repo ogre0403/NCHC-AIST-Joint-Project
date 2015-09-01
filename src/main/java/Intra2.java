@@ -8,7 +8,7 @@ import org.apache.hadoop.util.ToolRunner;
 import org.apache.log4j.Logger;
 
 /**
- * Created by ogre0403 on 2015/8/31.
+ * main function to launch Intra HD calculation using correct IDs.
  */
 public class Intra2 {
 

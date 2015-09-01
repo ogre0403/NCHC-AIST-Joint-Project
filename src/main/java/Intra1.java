@@ -9,7 +9,7 @@ import org.apache.log4j.Logger;
 
 
 /**
- * Created by 1403035 on 2015/8/24.
+ * main function to launch Intra HD calculation with all combinations.
  */
 public class Intra1 {
 

@@ -24,9 +24,8 @@ import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 import org.apache.hadoop.util.Tool;
 import org.apache.log4j.Logger;
 
-
 /**
- * Created by ogre0403 on 2015/8/31.
+ * Driver class to launch Inter HD calculation
  */
 public class InterHD extends Configured implements Tool {
 
@@ -44,7 +43,6 @@ public class InterHD extends Configured implements Tool {
         MERGE_OUTPUT_DIR = new Path(merge_output_dir);
         HD_INPUT_FILE = new Path(merge_output_dir + "/part-r-00000");
         HD_OUTPUT_DIR = new Path(hd_output_dir);
-
     }
 
     @Override
@@ -53,7 +51,8 @@ public class InterHD extends Configured implements Tool {
         FileSystem fs = FileSystem.get(getConf());
         FileStatus[] fileStat = fs.listStatus(MERGE_INPUT_DIR);
 
-
+        // Read all pre-calculated correct IDs files
+        // , and merge to single file
         Job mergeJob = Job.getInstance(getConf(), "Merge CorrectIDs Job");
         mergeJob.setJarByClass(InterHD.class);
         mergeJob.setReducerClass(FlattenReducer.class);
@@ -87,7 +86,7 @@ public class InterHD extends Configured implements Tool {
         if (mergeJob.waitForCompletion(true) == false)
             return 1;
 
-
+        // calculate Hamming distance using merged correct IDs file
         Job HDJob = Job.getInstance(getConf(), "Hamming distance job");
         HDJob.setJarByClass(InterHD.class);
         HDJob.setMapperClass(HDMapper.class);

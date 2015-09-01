@@ -9,10 +9,14 @@ import org.apache.hadoop.mapreduce.Reducer;
 
 import java.io.IOException;
 
-/**
- * Created by 1403035 on 2015/8/24.
- */
 public class CorrectIDCombiner extends Reducer<Text, ArrayIntPair,Text,ArrayIntPair> {
+
+
+    /**
+     * Value which emitted by reduce is composed by
+     * the number of 1's in each position of binary representation, and
+     * the partial number of binary representation.
+     */
     @Override
     protected void reduce(Text key, Iterable<ArrayIntPair> values, Context context) throws IOException, InterruptedException {
 

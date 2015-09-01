@@ -27,22 +27,39 @@ import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 import org.apache.hadoop.util.Tool;
 
 import java.net.URI;
+import java.net.URISyntaxException;
 
 /**
  * Created by 1403035 on 2015/8/24.
  */
 public class IntraHD_2 extends Configured implements Tool {
+
+    private Path FLATTEN_INPUT_FILE;
+    private Path FLATTEN_OUTPUT_DIR;
+    private Path CORRECTID_INPUT_FILE;
+    private Path CORRECTID_OUTPUT_DIR;
+    private Path HD_INPUT_FILE;
+    private Path HD_OUTPUT_DIR;
+    private URI CACHE;
+
+    public IntraHD_2(Path flatten_input_file,
+                     String flatten_output_dir,
+                     String correctid_output_dir,
+                     String HD_output_dir) throws URISyntaxException {
+
+        FLATTEN_INPUT_FILE = flatten_input_file;
+        FLATTEN_OUTPUT_DIR = new Path(flatten_output_dir);
+        CORRECTID_INPUT_FILE = new Path(flatten_output_dir + "/part-r-00000");
+        CORRECTID_OUTPUT_DIR = new Path(correctid_output_dir);
+        HD_INPUT_FILE = new Path(flatten_output_dir + "/part-r-00000");
+        HD_OUTPUT_DIR = new Path(HD_output_dir);
+        CACHE = new URI(correctid_output_dir + "/part-r-00000");
+
+    }
+
+
     @Override
     public int run(String[] args) throws Exception {
-
-        //TODO: input and output from CLI
-        String flatten_input ="flatten_input/data";
-        String flatten_output = "flatten_output/";
-        String correct_input = flatten_output+"part-r-00000";
-        String correct_output = "correctid_output/";
-        String HD_input = flatten_output+"part-r-00000";
-        String HD_output = "HD_output/";
-        String cache = correct_output+"part-r-00000";
 
         Job flattenJob = Job.getInstance(getConf(), "Flatten input job");
         flattenJob.setJarByClass(IntraHD_2.class);
@@ -56,8 +73,8 @@ public class IntraHD_2 extends Configured implements Tool {
         flattenJob.setOutputValueClass(BytesArrayWritable.class);
         flattenJob.setOutputFormatClass(SequenceFileOutputFormat.class);
         flattenJob.setNumReduceTasks(1);
-        FileInputFormat.addInputPath(flattenJob, new Path(flatten_input));
-        FileOutputFormat.setOutputPath(flattenJob, new Path(flatten_output));
+        FileInputFormat.addInputPath(flattenJob, FLATTEN_INPUT_FILE);
+        FileOutputFormat.setOutputPath(flattenJob, FLATTEN_OUTPUT_DIR);
 
         if (flattenJob.waitForCompletion(true) == false)
             return 1;
@@ -78,8 +95,8 @@ public class IntraHD_2 extends Configured implements Tool {
         correctIDJob.setOutputValueClass(BytesWritable.class);
         correctIDJob.setNumReduceTasks(1);
 
-        FileInputFormat.addInputPath(correctIDJob, new Path(correct_input));
-        FileOutputFormat.setOutputPath(correctIDJob, new Path(correct_output));
+        FileInputFormat.addInputPath(correctIDJob, CORRECTID_INPUT_FILE);
+        FileOutputFormat.setOutputPath(correctIDJob, CORRECTID_OUTPUT_DIR);
 
         if (correctIDJob.waitForCompletion(true) == false)
             return 1;
@@ -98,10 +115,10 @@ public class IntraHD_2 extends Configured implements Tool {
         HDJob.setOutputKeyClass(IntWritable.class);
         HDJob.setOutputValueClass(DoubleWritable.class);
         HDJob.setNumReduceTasks(1);
-        HDJob.addCacheFile(new URI(cache));
+        HDJob.addCacheFile(CACHE);
 
-        FileInputFormat.addInputPath(HDJob, new Path(HD_input));
-        FileOutputFormat.setOutputPath(HDJob, new Path(HD_output));
+        FileInputFormat.addInputPath(HDJob, HD_INPUT_FILE);
+        FileOutputFormat.setOutputPath(HDJob, HD_OUTPUT_DIR);
 
         return HDJob.waitForCompletion(true) ? 0 : 1;
 

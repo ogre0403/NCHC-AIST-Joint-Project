@@ -37,10 +37,10 @@ public class Intra1 {
         for(FileStatus fff : fileStat){
             if(fff.isFile()) {
                 logger.info(fff.getPath());
-                RunMRJobThread t1 = new RunMRJobThread(fff.getPath(),
+                RunIntra1JobThread t1 = new RunIntra1JobThread(fff.getPath(),
                         conf, args,toolArgs);
 
-                new Thread(t1,"").start();
+                new Thread(t1).start();
             }
         }
 
@@ -52,25 +52,14 @@ public class Intra1 {
     }
 }
 
-class RunMRJobThread implements Runnable{
+class RunIntra1JobThread extends RunMRJobThread{
 
-    private static Logger logger = Logger.getLogger(RunMRJobThread.class);
+    private static Logger logger = Logger.getLogger(RunIntra1JobThread.class);
 
-    private Path p1;
-    private Configuration conf;
-    private String[] args;
-    private String[] toolArgs;
-
-
-
-    public RunMRJobThread(Path p, Configuration conf,
-                          String[] orig, String[] remain){
-        this.p1 = p;
-        this.conf =conf;
-        this.args = orig;
-        this.toolArgs = remain;
+    public RunIntra1JobThread(Path p, Configuration conf,
+                              String[] orig, String[] remain){
+        super(p,conf,orig,remain);
     }
-
 
 
     @Override

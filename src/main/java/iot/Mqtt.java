@@ -16,6 +16,10 @@ import org.apache.spark.streaming.api.java.JavaStreamingContext;
 import org.apache.spark.streaming.mqtt.MQTTUtils;
 import scala.Tuple2;
 
+import javax.crypto.NoSuchPaddingException;
+import java.io.UnsupportedEncodingException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import java.util.List;
 
@@ -25,14 +29,19 @@ import java.util.List;
 public class Mqtt {
 
     private static final Duration BATCH_INTERVAL = Durations.seconds(10);
-    public static void main(String[] args) {
+    public static void main(String[] args) throws InvalidKeyException, NoSuchAlgorithmException,
+            NoSuchPaddingException, UnsupportedEncodingException {
+
+        //AES Cipher
+        final String key = "1234567890123456";
+
         SparkConf sparkConf = new SparkConf().setAppName("SparkStreamingMqttTest").setMaster("local[*]");
         // spark streaming context with a 10 second batch size
         JavaStreamingContext ssc = new JavaStreamingContext(sparkConf, BATCH_INTERVAL);
         ssc.checkpoint("/tmp/mqtt");
 
         //Define MQTT url and topic
-        String brokerUrl = "tcp://140.110.141.58:8443";
+        String brokerUrl = "tcp://192.168.33.20:1883";
         String topic = "test";
 
         //collect MQTT data using streaming context and MQTTUtils library
@@ -43,7 +52,8 @@ public class Mqtt {
                 .map(new Function<String, String>() {
                     @Override
                     public String call(String s) throws Exception {
-                        return s;
+                        AESCipher cipher = new AESCipher(key);
+                        return cipher.decrypt(s);
                     }
                 })
                 .flatMap(new FlatMapFunction<String, String>() {

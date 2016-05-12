@@ -21,7 +21,7 @@ def main():
         j = random.randint(0, 2)
         encrypt_ctx = cipher.encrypt(sentance[j])
         print ("Sending "+ encrypt_ctx + " : " + cipher.decrypt(encrypt_ctx))
-        # publish.single("test", encrypt_ctx, hostname="140.110.141.58", port=8443)
+        publish.single("test", encrypt_ctx, hostname="192.168.33.20", port=1883)
 
         time.sleep(j+1) # sleep random time
 

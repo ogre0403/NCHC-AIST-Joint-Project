@@ -13,9 +13,9 @@
 
 ### Start Mqtt Python Client Docker container
     
-    $ cd dockerization/docker-mqtt
+    $ cd mqtt-python
     $ docker build -t python-mqtt .
-    $ docker run -ti python-mqtt
+    $ docker run -ti --rm python-mqtt
     
 ### Run Spark-Streaming Application
     

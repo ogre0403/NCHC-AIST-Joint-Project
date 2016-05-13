@@ -1,7 +1,7 @@
 import paho.mqtt.publish as publish
 import time
 import random
-import string
+import subprocess
 from aes_cipher import AESCipher
 
 
@@ -12,7 +12,8 @@ sentance = ["Hello world",
 
 def main():
 
-    Key = "1234567890123456"
+    #Key = "F405FDC5853EEA6589B4B6B13D2B0EE0"
+    Key = getKeyByAugPake("140.110.141.63","7777")
     print("encrypt key is " + Key)
     cipher = AESCipher(Key)
 
@@ -21,13 +22,16 @@ def main():
         j = random.randint(0, 2)
         encrypt_ctx = cipher.encrypt(sentance[j])
         print ("Sending "+ encrypt_ctx + " : " + cipher.decrypt(encrypt_ctx))
-        publish.single("test", encrypt_ctx, hostname="192.168.33.20", port=1883)
+        #publish.single("test", encrypt_ctx, hostname="192.168.33.20", port=1883)
 
         time.sleep(j+1) # sleep random time
 
 
-def key(len=50):
-    return (''.join([random.choice(string.ascii_letters + string.digits) for i in range(len)]))
+def getKeyByAugPake(ip, port):
+    # Initiator's SK Value: 2AA58EAED5A04CE32B8CB65C0BD75FC2
+    out = subprocess.check_output(["./augpake/test3_client", "-s", ip , "-p", port])
+    return out.split(":")[1].strip()
+
 
 
 if __name__ == "__main__":

@@ -10,4 +10,7 @@ COPY aes_cipher.py /tmp/mqtt-python/aes_cipher.py
 COPY augpake/test3_client /tmp/mqtt-python/augpake/test3_client
 COPY augpake/augpake.conf /tmp/mqtt-python/augpake.conf
 
+
+RUN chmod 600 /tmp/mqtt-python/augpake.conf
+
 ENTRYPOINT ["python","/tmp/mqtt-python/mqtt.py"]

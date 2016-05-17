@@ -12,6 +12,7 @@ import java.security.NoSuchAlgorithmException;
 
 public class AESCipher {
 
+    // TODO: support 32 bit AES key (currently only support 16 bit key)
     String _key;
     SecretKeySpec AESkey;
     Cipher cipher;

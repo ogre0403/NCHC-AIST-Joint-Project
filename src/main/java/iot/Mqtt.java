@@ -17,6 +17,7 @@ import org.apache.spark.streaming.mqtt.MQTTUtils;
 import scala.Tuple2;
 
 import javax.crypto.NoSuchPaddingException;
+import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -26,23 +27,42 @@ import java.util.List;
 /**
  * Created by 1403035 on 2016/4/6.
  */
-public class Mqtt {
+public class Mqtt implements Serializable{
 
     private static final Duration BATCH_INTERVAL = Durations.seconds(10);
-    public static void main(String[] args) throws InvalidKeyException, NoSuchAlgorithmException,
-            NoSuchPaddingException, UnsupportedEncodingException {
+    String key;
+    String brokerUrl;
+    String topic;
 
-        //AES Cipher
-        final String key = "1234567890123456";
+    public Mqtt(String _key, String _broker, String _topic){
 
-        SparkConf sparkConf = new SparkConf().setAppName("SparkStreamingMqttTest").setMaster("local[*]");
+        //AES Cipher key, currently only support 16 bit key
+        key = (String) _key.subSequence(0,16);
+
+        //Define MQTT url and topic
+        brokerUrl = _broker;
+        topic = _topic;
+    }
+
+    public static void main(String[] args) throws InterruptedException, NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, UnsupportedEncodingException {
+        Mqtt mqtt = new Mqtt("D0ECF873CD28AE81DB573772E082CAD4","tcp://140.110.141.58:1883", "test");
+
+        mqtt.run(true);
+    }
+
+
+    public void run(boolean isLocal) throws InvalidKeyException, NoSuchAlgorithmException,
+            NoSuchPaddingException, UnsupportedEncodingException, InterruptedException {
+
+        SparkConf sparkConf = new SparkConf().setAppName("SparkStreamingMqttTest");
+
+        if(isLocal == true)
+            sparkConf.setMaster("local[*]");
+
         // spark streaming context with a 10 second batch size
         JavaStreamingContext ssc = new JavaStreamingContext(sparkConf, BATCH_INTERVAL);
         ssc.checkpoint("/tmp/mqtt");
 
-        //Define MQTT url and topic
-        String brokerUrl = "tcp://192.168.33.20:1883";
-        String topic = "test";
 
         //collect MQTT data using streaming context and MQTTUtils library
         JavaReceiverInputDStream<String> messages =

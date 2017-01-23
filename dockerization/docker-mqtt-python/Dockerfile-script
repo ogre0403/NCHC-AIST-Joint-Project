@@ -1,0 +1,12 @@
+FROM mqtt-client:base
+
+COPY mqtt-python/mqtt.py /tmp/mqtt-python/mqtt.py
+COPY mqtt-python/aes_cipher.py /tmp/mqtt-python/aes_cipher.py
+COPY dockerization/docker-mqtt-python/augpake/s_client /tmp/mqtt-python/augpake/s_client
+COPY dockerization/docker-mqtt-python/augpake/libaugpake.so /usr/local/lib/libaugpake.so
+COPY dockerization/docker-mqtt-python/augpake/augpake.conf /tmp/mqtt-python/augpake/augpake.conf
+
+RUN ldconfig
+RUN chmod 600 /tmp/mqtt-python/augpake/augpake.conf
+
+#ENTRYPOINT ["python","/tmp/mqtt-python/mqtt.py"]

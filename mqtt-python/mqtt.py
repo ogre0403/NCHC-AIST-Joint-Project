@@ -2,7 +2,8 @@ import paho.mqtt.publish as publish
 import time
 import random
 import subprocess
-import os
+import os, sys
+import logging
 from aes_cipher import AESCipher
 
 
@@ -11,12 +12,20 @@ sentance = ["Hello world",
             "Hi Spark Streaming"
             ]
 
-AUGPAKE_SERVER_IP = "140.110.141.63"
-AUGPAKE_SERVER_PORT = "7777"
+# AugPAKE server configuration
+AUGPAKE_SERVER_IP = "localhost"
+AUGPAKE_SERVER_PORT = "12345"
 
-MQTT_BROKER_IP = "140.110.141.58"
+# MQTT broker configuration
+MQTT_BROKER_IP = "localhost"
 MQTT_BROKER_PORT = "1883"
 
+# logger configuration
+LOGGING_FILE = 'mqtt-client.log'
+logging.basicConfig(#filename=LOGGING_FILE,
+                    level=logging.DEBUG,
+                    format='%(asctime)s [%(levelname)s] %(filename)s_%(lineno)d  : %(message)s')
+logger = logging.getLogger('root')
 
 def main():
 
@@ -25,25 +34,23 @@ def main():
     global MQTT_BROKER_IP
     global MQTT_BROKER_PORT
 
-    if os.environ.has_key("AUGPAKE_SERVER_IP"):
-        AUGPAKE_SERVER_IP = os.environ.get("AUGPAKE_SERVER_IP")
+    logger.debug("AUGPAKE_SERVER_IP: {}".format(AUGPAKE_SERVER_IP))
+    logger.debug("AUGPAKE_SERVER_PORT: {}".format(AUGPAKE_SERVER_PORT))
+    logger.debug("MQTT_BROKER_IP: {}".format(MQTT_BROKER_IP))
+    logger.debug("MQTT_BROKER_PORT: {}".format(MQTT_BROKER_PORT))
 
-    if os.environ.has_key("AUGPAKE_SERVER_PORT"):
-        AUGPAKE_SERVER_PORT = os.environ.get("AUGPAKE_SERVER_PORT")
 
-    if os.environ.has_key("MQTT_BROKER_IP"):
-        MQTT_BROKER_IP = os.environ.get("MQTT_BROKER_IP")
+    try:
+        Key = getKeyByAugPake(AUGPAKE_SERVER_IP, AUGPAKE_SERVER_PORT)
+    except OSError as e:
+        logger.error(e)
+        Key = None
 
-    if os.environ.has_key("MQTT_BROKER_PORT"):
-        MQTT_BROKER_PORT = os.environ.get("MQTT_BROKER_PORT")
+    if Key is None:
+	logger.error("Key is None. Exit...")
+	exit()
 
-    print("AUGPAKE_SERVER_IP:" + AUGPAKE_SERVER_IP)
-    print("AUGPAKE_SERVER_PORT: " + AUGPAKE_SERVER_PORT)
-    print("MQTT_BROKER_IP:" + MQTT_BROKER_IP)
-    print("MQTT_BROKER_PORT: " + MQTT_BROKER_PORT)
-
-    Key = getKeyByAugPake(AUGPAKE_SERVER_IP, AUGPAKE_SERVER_PORT)
-    print("encrypt key is " + Key)
+    # create cipher
     cipher = AESCipher(Key)
 
 
@@ -51,15 +58,22 @@ def main():
         j = random.randint(0, 2)
         encrypt_ctx = cipher.encrypt(sentance[j])
         print ("Sending "+ encrypt_ctx + " : " + cipher.decrypt(encrypt_ctx))
-        publish.single("test", encrypt_ctx, hostname=MQTT_BROKER_IP, port=int(MQTT_BROKER_PORT))
-
+#        publish.single("test", encrypt_ctx, hostname=MQTT_BROKER_IP, port=int(MQTT_BROKER_PORT))
         time.sleep(j+1) # sleep random time
 
 
 def getKeyByAugPake(ip, port):
-    # Initiator's SK Value: 2AA58EAED5A04CE32B8CB65C0BD75FC2
-    out = subprocess.check_output(["./augpake/test3_client", "-s", ip , "-p", port], cwd="/tmp/mqtt-python")
-    return out.split(":")[1].strip()
+
+    work_dir = os.path.abspath(os.path.dirname(sys.argv[0]))+"/../augpake_src/client/"
+    out = subprocess.check_output(["./s_client", ip, port], cwd=work_dir)
+    a = out.split("-")
+    if a[0].strip():
+    	logger.info("Session ID: {}".format(a[0].strip()))
+    	logger.info("Session KEY: {}".format(a[1].strip()))
+	return a[1].strip()
+    else:
+        # Something wrong...
+	return None
 
 
 

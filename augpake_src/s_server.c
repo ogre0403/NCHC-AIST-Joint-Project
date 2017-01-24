@@ -49,18 +49,19 @@ int main(int argc, char *argv[]) {
 	}
 	freeaddrinfo(info);
 
-	if (listen(sock, 1) != 0) {
-		perror("listen() failed.");
-		goto Done;
-	}
-	socklen = sizeof(client_addr);
-	if ((new_sock = accept(sock, (struct sockaddr *)&client_addr, &socklen)) < 0) {
-		perror("accept() failed.");
-		goto Done;
-	}
+	while(1){
+		if (listen(sock, 1) != 0) {
+			perror("listen() failed.");
+			goto Done;
+		}
+		socklen = sizeof(client_addr);
+		if ((new_sock = accept(sock, (struct sockaddr *)&client_addr, &socklen)) < 0) {
+			perror("accept() failed.");
+			goto Done;
+		}
 
-	do_responder(new_sock);
-
+		do_responder(new_sock);
+	}
 Done:
 	if (new_sock != -1)
 		close(new_sock);

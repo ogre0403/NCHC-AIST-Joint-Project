@@ -23,12 +23,14 @@ logger = logging.getLogger('root')
 class IdKeyServer(threading.Thread):
 
     server = None
+    lookupTable = {}
 
-    def __init__(self, lookuptbl):
+    def __init__(self, port = 9090):
         threading.Thread.__init__(self)
-        handler = LookupHandler(lookuptbl)
+        self.setDaemon(True)
+        handler = LookupHandler(self.lookupTable)
         processor = AugPAKE.Processor(handler)
-        transport = TSocket.TServerSocket("localhost", 9090)
+        transport = TSocket.TServerSocket("0.0.0.0", port)
         tfactory = TTransport.TBufferedTransportFactory()
         pfactory = TBinaryProtocol.TBinaryProtocolFactory()
         self.server = TServer.TSimpleServer(processor, transport, tfactory, pfactory)
@@ -37,6 +39,10 @@ class IdKeyServer(threading.Thread):
     def run(self):
         logger.info("Starting thrift server in python...")
         self.server.serve()
+ 
+    def addKey(self, ID, KEY):
+        logger.debug("add < %s, %s > " % (ID, KEY))
+        self.lookupTable[ID] = KEY
 
 class LookupHandler:
     lookupTable = None

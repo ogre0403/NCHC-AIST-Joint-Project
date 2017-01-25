@@ -8,6 +8,8 @@ import fcntl
 import signal
 import logging
 
+from ThriftServer import *
+
 # Wrapper of AugPAKE server, get and store session id and key pair.
 
 AUGPAKE_COMMAND = ["./s_server"]
@@ -35,10 +37,15 @@ def augpake_init(port):
 
     return process
 
+
+def ThriftServer_init():
+    return IdKeyServer()
+
 def augpake(port):
     process = augpake_init(port)
+    tServer = ThriftServer_init()
+    tServer.start()
 
-    #TODO: close process when this python program crash 
     while True:
         reads, writes, errors = select.select([process.stdout, process.stderr], [], [], 0.1)    
 
@@ -54,14 +61,7 @@ def augpake(port):
              if len(tmp) != 2:
                  logger.warning("{} is not vaild ID-KEY format.".format(out))
                  continue
-             saveIdKey(tmp[0], tmp[1])
-
-
-
-#TODO: save id and key for future query
-def saveIdKey(id, key):
-    logger.debug("id: "+id)
-    logger.debug("key: "+key)
+             tServer.addKey(tmp[0].strip(), tmp[1].strip())
 
 
 

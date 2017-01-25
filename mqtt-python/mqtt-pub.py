@@ -5,15 +5,12 @@ import time
 import random
 import subprocess
 import os, sys, logging
+from tailf import tailf
 from aes_cipher import AESCipher
 
-
-sentance = ["Hello world",
-            "hello Spark",
-            "Hi Spark Streaming"
-            ]
-
 SEP="\x01"
+
+WATCH_FILE = "/var/log/auth.log"
 
 # AugPAKE server configuration
 AUGPAKE_SERVER_IP = "localhost"
@@ -22,6 +19,7 @@ AUGPAKE_SERVER_PORT = "12345"
 # MQTT broker configuration
 MQTT_BROKER_IP = "localhost"
 MQTT_BROKER_PORT = "1883"
+MQTT_TOPIC = "test"
 
 # logger configuration
 LOGGING_FILE = 'mqtt-client.log'
@@ -50,14 +48,12 @@ def main():
     # create cipher
     cipher = AESCipher(Key)
 
-
-    while True:
-        j = random.randint(0, 2)
-        encrypt_ctx = cipher.encrypt(sentance[j])
+    for line in tailf(WATCH_FILE):
+        logger.debug("Plain Text: {}".format(line))
+        encrypt_ctx = cipher.encrypt(line)
         prefix_encrypt = ID + SEP + encrypt_ctx;
-        logger.debug("Sending ID={}, encrypt_msg={}, {}".format(ID, encrypt_ctx, prefix_encrypt))
-        publish.single("test", prefix_encrypt, hostname=MQTT_BROKER_IP, port=int(MQTT_BROKER_PORT))
-        time.sleep(j+1) # sleep random time
+        logger.debug("Encrypt Text prefixed ID: {}".format(prefix_encrypt))
+        publish.single(MQTT_TOPIC, prefix_encrypt, hostname=MQTT_BROKER_IP, port=int(MQTT_BROKER_PORT))
 
 
 def getKeyByAugPake(ip, port):

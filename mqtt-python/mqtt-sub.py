@@ -6,7 +6,7 @@ import paho.mqtt.client as mqtt
 from augpake import *
 from aes_cipher import AESCipher
 import syslog_client
-
+from config import *
 
 from thrift import Thrift
 from thrift.transport import TSocket
@@ -17,17 +17,6 @@ from thrift.protocol import TBinaryProtocol
 thrift_client = None
 mqtt_looping = False
 
-# MQTT broker configuration
-MQTT_BROKER_IP = "localhost"
-MQTT_BROKER_PORT = "1883"
-TOPIC_ROOT = "test"
-
-THRIFT_SERVER_IP = "localhost"
-THRIFT_SERVER_PORT = 9090
-
-SYSLOG_SERVER_IP = "localhost"
-
-SEP = "\x01"
 
 SESSION_KEY_CACHE = {}      # <id, key> pair
 SESSION_CIPHER_CACHE = {}   # <id, cipher> pair
@@ -43,7 +32,7 @@ logger = logging.getLogger('root')
 
 def on_connect(mq, userdata, rc, _):
     # subscribe when connected.
-    mq.subscribe(TOPIC_ROOT + '/#')
+    mq.subscribe(MQTT_TOPIC + '/#')
 
 
 def on_message(mq, userdata, msg):
@@ -84,11 +73,7 @@ def syslog_output(msg):
     remote_syslog.notice(msg)
 
 
-
 def thrift_client_init():
-
-    # client = None
-    # transport = None
     try:
         transport = TSocket.TSocket(THRIFT_SERVER_IP, THRIFT_SERVER_PORT)
         transport = TTransport.TBufferedTransport(transport)
@@ -118,7 +103,7 @@ def mqtt_client_thread():
         sys.exit(0)
 
     mqtt_looping = True
-    logger.info("Mqtt client thread listen on %s" % (TOPIC_ROOT))
+    logger.info("Mqtt client thread listen on %s" % MQTT_TOPIC)
 
     while mqtt_looping:
         mqtt_client.loop()

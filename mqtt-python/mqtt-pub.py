@@ -5,19 +5,8 @@ import subprocess
 import os, sys, logging
 from tailf import tailf
 from aes_cipher import AESCipher
+from config import *
 
-SEP = "\x01"
-
-WATCH_FILE = "/var/log/auth.log"
-
-# AugPAKE server configuration
-AUGPAKE_SERVER_IP = "localhost"
-AUGPAKE_SERVER_PORT = "12345"
-
-# MQTT broker configuration
-MQTT_BROKER_IP = "localhost"
-MQTT_BROKER_PORT = "1883"
-MQTT_TOPIC = "test"
 
 # logger configuration
 LOGGING_FILE = 'mqtt-pub.log'
@@ -52,7 +41,7 @@ def main():
         encrypt_ctx = cipher.encrypt(line)
         prefix_encrypt = ID + SEP + encrypt_ctx;
         logger.debug("Encrypt Text prefixed ID: {}".format(prefix_encrypt))
-        publish.single(MQTT_TOPIC, prefix_encrypt, hostname=MQTT_BROKER_IP, port=int(MQTT_BROKER_PORT))
+        publish.single(MQTT_TOPIC, prefix_encrypt, hostname=MQTT_BROKER_IP, port=MQTT_BROKER_PORT)
 
 
 def getKeyByAugPake(ip, port):

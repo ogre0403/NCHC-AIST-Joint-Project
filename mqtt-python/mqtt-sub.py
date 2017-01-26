@@ -5,6 +5,7 @@ import paho.mqtt.client as mqtt
 
 from augpake import *
 from aes_cipher import AESCipher
+import syslog_client
 
 
 from thrift import Thrift
@@ -23,6 +24,8 @@ TOPIC_ROOT = "test"
 
 THRIFT_SERVER_IP = "localhost"
 THRIFT_SERVER_PORT = 9090
+
+SYSLOG_SERVER_IP = "localhost"
 
 SEP = "\x01"
 
@@ -75,9 +78,10 @@ def DecodePayload(payload):
     return SESSION_CIPHER_CACHE[ID].decrypt(msg)
 
 
-#TODO
 def syslog_output(msg):
-    logger.debug("Received Plain text: " % msg)
+    logger.debug("Received Plain text: %s" % msg)
+    remote_syslog = syslog_client.Syslog(SYSLOG_SERVER_IP)
+    remote_syslog.notice(msg)
 
 
 

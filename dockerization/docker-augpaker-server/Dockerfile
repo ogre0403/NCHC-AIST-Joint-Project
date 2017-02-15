@@ -9,6 +9,8 @@ COPY dockerization/lib/libaugpake-ubuntu-64.so /usr/local/lib/libaugpake.so
 
 RUN cd /tmp/augpake_src  && \
     make clean; make && \
+    chmod 600 /tmp/augpake_src/server/augpake.conf && \
+    chmod 600 /tmp/augpake_src/client/augpake.conf && \
     ldconfig
 
 

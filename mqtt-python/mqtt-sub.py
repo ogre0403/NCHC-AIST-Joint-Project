@@ -5,7 +5,7 @@ import paho.mqtt.client as mqtt
 
 from augpake import *
 from aes_cipher import AESCipher
-import syslog_client
+# import syslog_client
 from config import *
 
 from thrift import Thrift
@@ -13,10 +13,14 @@ from thrift.transport import TSocket
 from thrift.transport import TTransport
 from thrift.protocol import TBinaryProtocol
 
+from outputClass import *
+
+
 # mqtt_client = None
 thrift_client = None
 mqtt_looping = False
 
+output_client = None
 
 SESSION_KEY_CACHE = {}      # <id, key> pair
 SESSION_CIPHER_CACHE = {}   # <id, cipher> pair
@@ -36,11 +40,12 @@ def on_connect(mq, userdata, rc, _):
 
 
 def on_message(mq, userdata, msg):
+    global output_client
     logger.debug("payload: %s" % msg.payload)
 
     text = DecodePayload(msg.payload)
     if text is not None:
-        syslog_output(text)
+        output_client.write(text)
     else:
         logger.error("Decode payload {%s} fail." % msg.payload)
 
@@ -67,10 +72,15 @@ def DecodePayload(payload):
     return SESSION_CIPHER_CACHE[ID].decrypt(msg)
 
 
-def syslog_output(msg):
-    logger.debug("Received Plain text: %s" % msg)
-    remote_syslog = syslog_client.Syslog(SYSLOG_SERVER_IP)
-    remote_syslog.notice(msg)
+def instance(targetClass):
+    if OUTPUTTYPE == 'default_print':
+        return targetClass()
+    elif OUTPUTTYPE == 'Syslog':
+        return targetClass(SYSLOG_SERVER_IP)
+    elif OUTPUTTYPE == 'influxdb_client':
+        return targetClass(INFLUXDB_SERVER_IP, 8086, 'root', 'root')
+    else:
+        return targetClass()
 
 
 def thrift_client_init():
@@ -89,12 +99,15 @@ def thrift_client_init():
 
 
 def mqtt_client_thread():
-    global mqtt_looping, thrift_client
+    global mqtt_looping, thrift_client, output_client
 
     thrift_client, thrift_connection = thrift_client_init()
     mqtt_client = mqtt.Client()
     mqtt_client.on_connect = on_connect
     mqtt_client.on_message = on_message
+
+    targetClass = getattr(OutputType, OUTPUTTYPE)
+    output_client = instance(targetClass)
 
     try:
         mqtt_client.connect(MQTT_BROKER_IP)

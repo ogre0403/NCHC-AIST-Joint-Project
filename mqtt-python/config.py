@@ -23,6 +23,10 @@ THRIFT_SERVER_PORT = 9090
 # remote syslog configuration
 # For mqtt-sub.py
 SYSLOG_SERVER_IP = "localhost"
+INFLUXDB_SERVER_IP = "localhost"
+
+# influxdb_client | Syslog | default_print
+OUTPUTTYPE = "default_print"
 
 
 

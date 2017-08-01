@@ -99,3 +99,9 @@ $ docker run -ti --rm --name pub \
     -v `pwd`/config.py:/tmp/mqtt-python/config.py 
     nchc-aist:mqtt-sub 
   ```
+  
+## Run influxdb container
+   For Demo:
+   ```
+    $ docker run --name influxdb -p 8083:8083 -p 8086:8086 -p 25826:25826/udp -v $PWD/influxdb:/var/lib/influxdb -v $PWD/influxdb.conf:/etc/influxdb/influxdb.conf:ro -v $PWD/types.db:/usr/share/collectd/types.db:ro influxdb:1.0
+   ```

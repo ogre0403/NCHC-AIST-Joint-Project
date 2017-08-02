@@ -82,6 +82,10 @@ $ docker run -ti --rm --name pub \
   
   # usedocker bridge ip if test in docker
    SYSLOG_SERVER_IP = "140.110.113.134"
+   INFLUXDB_SERVER_IP = "influxdb"
+
+  # influxdb_client | Syslog | default_print
+    OUTPUTTYPE = "influxdb_client"
 
   
   $ docker run -ti --rm --name sub \ 
@@ -96,6 +100,7 @@ $ docker run -ti --rm --name pub \
   $ docker run -ti --rm --name sub \
     --link augpake-server:augpake-server \
     --link broker:broker \
+    --link influxdb:influxdb \
     -v `pwd`/config.py:/tmp/mqtt-python/config.py 
     nchc-aist:mqtt-sub 
   ```

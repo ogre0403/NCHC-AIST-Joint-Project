@@ -2,6 +2,7 @@ from influxdb import InfluxDBClient
 import socket
 from syslog_client import Facility
 from syslog_client import Level
+import dateutil.parser as parser
 
 
 
@@ -19,7 +20,7 @@ class OutputType:
         @staticmethod
         def convert_to_json(msg):
             data = str.split(msg, "|")
-            time = data[0]
+            time = OutputType.influxdb_client.convert_time_format(data[0])
             src_ip = data[1]
             src_port = data[2]
             dest_ip = data[3]
@@ -46,6 +47,11 @@ class OutputType:
             }
             ]
             return json_body
+
+        @staticmethod
+        def convert_time_format(time):
+            date = (parser.parse(time + "+0800"))
+            return date.isoformat()
 
         def write(self, msg):
             self.client.write_points(self.convert_to_json(msg))

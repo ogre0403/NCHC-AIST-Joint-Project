@@ -3,6 +3,7 @@ import socket
 from syslog_client import Facility
 from syslog_client import Level
 import dateutil.parser as parser
+from geoip import geolite2
 
 
 
@@ -27,6 +28,8 @@ class OutputType:
             dest_port = data[4]
             protocol = data[5]
             status = data[6]
+            print src_ip
+            country = OutputType.influxdb_client.find_country(src_ip)
 
             json_body = [
             {
@@ -37,8 +40,8 @@ class OutputType:
                     "dest_ip": dest_ip,
                     "dest_port": dest_port,
                     "protocol": protocol,
-                    "status": status
-
+                    "status": status,
+                    "country": country
                 },
                 "time": time,
                 "fields": {
@@ -52,6 +55,13 @@ class OutputType:
         def convert_time_format(time):
             date = (parser.parse(time + "+0800"))
             return date.isoformat()
+
+        @staticmethod
+        def find_country(ip):
+            match = geolite2.lookup(ip)
+            print "aaa"
+            print match.country
+            return match.country
 
         def write(self, msg):
             self.client.write_points(self.convert_to_json(msg))

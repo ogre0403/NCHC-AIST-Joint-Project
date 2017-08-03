@@ -91,6 +91,7 @@ $ docker run -ti --rm --name pub \
   $ docker run -ti --rm --name sub \ 
     --link augpake-server:augpake-server \ 
     --link broker:broker \
+    --link influxdb:influxdb \
     -v `pwd`/config.py:/tmp/mqtt-python/config.py \ 
     nchc-aist:mqtt-sub
   ```
@@ -108,5 +109,11 @@ $ docker run -ti --rm --name pub \
 ## Run influxdb container
    For Demo:
    ```
-    $ docker run --name influxdb -p 8083:8083 -p 8086:8086 -p 25826:25826/udp -v $PWD/influxdb:/var/lib/influxdb -v $PWD/influxdb.conf:/etc/influxdb/influxdb.conf:ro -v $PWD/types.db:/usr/share/collectd/types.db:ro influxdb:1.0
+   $ docker run --name influxdb -p 8083:8083 -p 8086:8086 -p 25826:25826/udp -v $PWD/influxdb:/var/lib/influxdb -v $PWD/influxdb.conf:/etc/influxdb/influxdb.conf:ro -v $PWD/types.db:/usr/share/collectd/types.db:ro influxdb:1.0
+   ```
+
+## Run Grafana Container
+   For Demo:
+   ```
+   $ docker run --name grafana -p 3000:3000 -v $PWD/grafana:/var/lib/grafana --link influxdb -e "GF_INSTALL_PLUGINS=grafana-worldmap-panel,grafana-piechart-panel" grafana/grafana:3.1.1
    ```

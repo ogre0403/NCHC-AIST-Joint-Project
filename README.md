@@ -1,5 +1,24 @@
 # NCHC-AIST joint Project
 
+## 2017 Action Item
+
+### 1. aaa
+
+```bash
+$ apt-get install libssl-dev
+
+$ pip install paho-mqtt pycrypto pytailf thrift
+
+docker build -t mqtt-client:v1 -f ./dockerization/docker-mqtt-python/Dockerfile-script
+
+$ cd NCHC-AIST-Joint-Project/dockerization/docker-mosquitto
+$ sudo docker run --rm -ti -v `pwd`/mosquitto.conf:/etc/mosquitto/mosquitto.conf \
+  -p 1883:1883 -p 9883:9883 jllopis/mosquitto:v1.4.10
+
+```
+
+### 2. bbb
+
 ## 2016 Action Item
 
 ### Start Mosquitto Docker container

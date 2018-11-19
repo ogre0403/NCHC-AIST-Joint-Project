@@ -1,5 +1,4 @@
 from PIL import Image
-import numpy as np
 import monotonic
 
 
@@ -36,33 +35,28 @@ def addWatermark(base, watermark):
     pixels = result.load()
 
     for w in range(width):
-        pixels[w, 0] = base_pixel[w, 0]
+        pixels[w, height - 1] = base_pixel[w, height - 1]
 
     for h in range(height):
-        pixels[0, h] = base_pixel[0, h]
+        pixels[width - 1, h] = base_pixel[width - 1, h]
 
-    A = np.zeros([width, height], dtype=(int, 3))
-
-    for h in range(1, height):
-        for w in range(1, width):
+    for h in range(0, height - 1):
+        for w in range(0, width - 1):
             if watermark_rgb.getpixel((w, h)) != (255, 255, 255):
-                a = estimate_a(base_rgb.getpixel((w - 1, h)),
-                               base_rgb.getpixel((w, h - 1)),
-                               base_rgb.getpixel((w - 1, h - 1)))
+                a = estimate_a(base_rgb.getpixel((w + 1, h)),
+                               base_rgb.getpixel((w, h + 1)),
+                               base_rgb.getpixel((w + 1, h + 1)))
 
-                # a = (128, 128, 128)
-                A[w, h] = a
                 b = watermark_rgb.getpixel((w, h))
                 pixels[w, h] = F_inverse(b, F(a, base_rgb.getpixel((w, h))))
             else:
                 pixels[w, h] = base_pixel[w, h]
 
-    return A, result
+    return result
 
 
-def removeWatermark(coverImg, A, watermark):
-    width = A.shape[0]
-    height = A.shape[1]
+def removeWatermark(coverImg, watermark):
+    width, height = coverImg.size
 
     watermark = Image.open(watermark).resize(coverImg.size)
     watermark_rgb = watermark.convert('RGB')
@@ -73,16 +67,17 @@ def removeWatermark(coverImg, A, watermark):
     base_pixel = coverImg.load()
 
     for w in range(width):
-        pixels[w, 0] = base_pixel[w, 0]
+        pixels[w, height - 1] = base_pixel[w, height - 1]
 
     for h in range(height):
-        pixels[0, h] = base_pixel[0, h]
+        pixels[width - 1, h] = base_pixel[width - 1, h]
 
-    for h in range(height - 1, 0, -1):
-        for w in range(width - 1, 0, -1):
+    for h in range(height - 2, -1, -1):
+        for w in range(width - 2, -1, -1):
             if watermark_rgb.getpixel((w, h)) != (255, 255, 255):
-                a = A[w, h]
-                # a = (128, 128, 128)
+                a = estimate_a(pixels[w + 1, h],
+                               pixels[w, h + 1],
+                               pixels[w + 1, h + 1])
                 b = watermark_rgb.getpixel((w, h))
                 pixels[w, h] = F_inverse(a, F(b, base_pixel[w, h]))
             else:

@@ -34,8 +34,13 @@ def addWatermark(origin, watermark, blk_width=0, blk_height=0):
     result_image = Image.new('RGB', (width, height))
     result_pixel = result_image.load()
 
-    # todo: add watermark block by block
-    addWatermarkBlock((0, 0), (width - 1, height - 1), watermark, origin_pixel, result_pixel)
+    # todo: add watermark block by block in generic form
+    # addWatermarkBlock((0, 0), (width - 1, height - 1), watermark, origin_pixel, result_pixel)
+    addWatermarkBlock((0, 0), (299, 212), watermark, origin_pixel, result_pixel)
+    addWatermarkBlock((300, 0), (598, 212), watermark, origin_pixel, result_pixel)
+    addWatermarkBlock((0, 213), (299, 425), watermark, origin_pixel, result_pixel)
+    addWatermarkBlock((300, 213), (598, 425), watermark, origin_pixel, result_pixel)
+
     return result_image
 
 
@@ -46,20 +51,20 @@ def addWatermarkBlock(start_wh, end_wh, watermark, origin_pixel, result_pixel):
     watermark = Image.open(watermark).resize((width, height))
     watermark_rgb = watermark.convert('RGB')
 
-    for w in range(width):
+    for w in range(start_wh[0], end_wh[0]):
         result_pixel[w, end_wh[1]] = origin_pixel[w, end_wh[1]]
 
-    for h in range(height):
+    for h in range(start_wh[1], end_wh[1]):
         result_pixel[end_wh[0], h] = origin_pixel[end_wh[0], h]
 
     for h in range(start_wh[1], end_wh[1]):
         for w in range(start_wh[0], end_wh[0]):
-            if watermark_rgb.getpixel((w, h)) != (255, 255, 255):
+            if watermark_rgb.getpixel((w - start_wh[0], h - start_wh[1])) != (255, 255, 255):
                 a = estimate_a(origin_pixel[w + 1, h],
                                origin_pixel[w, h + 1],
                                origin_pixel[w + 1, h + 1])
 
-                b = watermark_rgb.getpixel((w, h))
+                b = watermark_rgb.getpixel((w - start_wh[0], h - start_wh[1]))
                 result_pixel[w, h] = F_inverse(b, F(a, origin_pixel[w, h]))
             else:
                 result_pixel[w, h] = origin_pixel[w, h]
@@ -77,8 +82,12 @@ def removeWatermark(masked_image, watermark, blk_width=0, blk_height=0):
 
     masked_pixel = masked_image.load()
 
-    # todo: remove watermark block by block
-    removeWatermarkBlock((0, 0), (width - 1, height - 1), watermark, masked_pixel, result_pixel)
+    # todo: remove watermark block by block in generic form
+    # removeWatermarkBlock((0, 0), (width - 1, height - 1), watermark, masked_pixel, result_pixel)
+    removeWatermarkBlock((0, 0), (299, 212), watermark, masked_pixel, result_pixel)
+    removeWatermarkBlock((300, 0), (598, 212), watermark, masked_pixel, result_pixel)
+    removeWatermarkBlock((0, 213), (299, 425), watermark, masked_pixel, result_pixel)
+    removeWatermarkBlock((300, 213), (598, 425), watermark, masked_pixel, result_pixel)
 
     return result_image
 
@@ -90,19 +99,19 @@ def removeWatermarkBlock(start_wh, end_wh, watermark_file, masked_pixel, result_
     watermark = Image.open(watermark_file).resize((width, height))
     watermark_rgb = watermark.convert('RGB')
 
-    for w in range(width):
+    for w in range(start_wh[0], end_wh[0]):
         result_pixel[w, end_wh[1]] = masked_pixel[w, end_wh[1]]
 
-    for h in range(height):
+    for h in range(start_wh[1], end_wh[1]):
         result_pixel[end_wh[0], h] = masked_pixel[end_wh[0], h]
 
     for h in range(end_wh[1], start_wh[1], -1):
         for w in range(end_wh[0], start_wh[0], -1):
-            if watermark_rgb.getpixel((w, h)) != (255, 255, 255):
+            if watermark_rgb.getpixel((w - start_wh[0], h - start_wh[1])) != (255, 255, 255):
                 a = estimate_a(result_pixel[w + 1, h],
                                result_pixel[w, h + 1],
                                result_pixel[w + 1, h + 1])
-                b = watermark_rgb.getpixel((w, h))
+                b = watermark_rgb.getpixel((w - start_wh[0], h - start_wh[1]))
                 result_pixel[w, h] = F_inverse(a, F(b, masked_pixel[w, h]))
             else:
                 result_pixel[w, h] = masked_pixel[w, h]

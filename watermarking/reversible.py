@@ -27,19 +27,31 @@ def addWatermark(origin, watermark, blk_width=0, blk_height=0):
     origin_pixel = origin_image.load()
     width, height = origin_image.size
 
-    if blk_height != 0 and blk_width != 0:
-        width = blk_width
-        height = blk_height
-
     result_image = Image.new('RGB', (width, height))
     result_pixel = result_image.load()
 
-    # todo: add watermark block by block in generic form
-    # addWatermarkBlock((0, 0), (width - 1, height - 1), watermark, origin_pixel, result_pixel)
-    addWatermarkBlock((0, 0), (299, 212), watermark, origin_pixel, result_pixel)
-    addWatermarkBlock((300, 0), (598, 212), watermark, origin_pixel, result_pixel)
-    addWatermarkBlock((0, 213), (299, 425), watermark, origin_pixel, result_pixel)
-    addWatermarkBlock((300, 213), (598, 425), watermark, origin_pixel, result_pixel)
+    if blk_width == 0:
+        blk_width = width
+
+    if blk_height == 0:
+        blk_height = height
+
+    # add watermark block by block in generic form
+    # ref: https://stackoverflow.com/questions/2356501/how-do-you-round-up-a-number-in-python
+    for x in range(width // blk_width + (width % blk_width > 0)):
+        for y in range(height // blk_height + (height % blk_height > 0)):
+            start_x = x * blk_width
+            start_y = y * blk_height
+            end_x = (x + 1) * blk_width - 1
+            end_y = (y + 1) * blk_height - 1
+
+            if x == (width // blk_width + (width % blk_width > 0) - 1):
+                end_x = width - 1
+
+            if y == (height // blk_height + (height % blk_height > 0) - 1):
+                end_y = height - 1
+            # todo: speedup by thread
+            addWatermarkBlock((start_x, start_y), (end_x, end_y), watermark, origin_pixel, result_pixel)
 
     return result_image
 

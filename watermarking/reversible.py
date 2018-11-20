@@ -84,22 +84,32 @@ def addWatermarkBlock(start_wh, end_wh, watermark, origin_pixel, result_pixel):
 
 def removeWatermark(masked_image, watermark, blk_width=0, blk_height=0):
     width, height = masked_image.size
-
-    if blk_height != 0 and blk_width != 0:
-        width = blk_width
-        height = blk_height
+    masked_pixel = masked_image.load()
 
     result_image = Image.new('RGB', (width, height))
     result_pixel = result_image.load()
 
-    masked_pixel = masked_image.load()
+    if blk_width == 0:
+        blk_width = width
 
-    # todo: remove watermark block by block in generic form
-    # removeWatermarkBlock((0, 0), (width - 1, height - 1), watermark, masked_pixel, result_pixel)
-    removeWatermarkBlock((0, 0), (299, 212), watermark, masked_pixel, result_pixel)
-    removeWatermarkBlock((300, 0), (598, 212), watermark, masked_pixel, result_pixel)
-    removeWatermarkBlock((0, 213), (299, 425), watermark, masked_pixel, result_pixel)
-    removeWatermarkBlock((300, 213), (598, 425), watermark, masked_pixel, result_pixel)
+    if blk_height == 0:
+        blk_height = height
+
+    # remove watermark block by block in generic form
+    for x in range(width // blk_width + (width % blk_width > 0)):
+        for y in range(height // blk_height + (height % blk_height > 0)):
+            start_x = x * blk_width
+            start_y = y * blk_height
+            end_x = (x + 1) * blk_width - 1
+            end_y = (y + 1) * blk_height - 1
+
+            if x == (width // blk_width + (width % blk_width > 0) - 1):
+                end_x = width - 1
+
+            if y == (height // blk_height + (height % blk_height > 0) - 1):
+                end_y = height - 1
+            # todo: speedup by thread
+            removeWatermarkBlock((start_x, start_y), (end_x, end_y), watermark, masked_pixel, result_pixel)
 
     return result_image
 

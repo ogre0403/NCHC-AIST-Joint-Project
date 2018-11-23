@@ -51,6 +51,11 @@ def addWatermark(origin, watermark, blk_width=0, blk_height=0):
             if y == (height // blk_height + (height % blk_height > 0) - 1):
                 end_y = height - 1
             # todo: speedup by multiple process
+            # p = Process(target=ff, args=(x, y))
+            # p = Process(target=addWatermarkBlock,
+            #             args=((start_x, start_y), (end_x, end_y), watermark, origin_pixel, result_pixel))
+            # p.start()
+            # p.join()
             addWatermarkBlock((start_x, start_y), (end_x, end_y), watermark, origin_pixel, result_pixel)
 
     return result_image
@@ -129,10 +134,6 @@ def removeWatermarkBlock(start_wh, end_wh, watermark_file, masked_pixel, result_
 
     for h in range(end_wh[1] - 1, start_wh[1] - 1, -1):
         for w in range(end_wh[0] - 1, start_wh[0] - 1, -1):
-            # print(start_wh)
-            # print(end_wh)
-            # print(w, h)
-            # print("=====")
             if watermark_rgb.getpixel((w - start_wh[0], h - start_wh[1])) != (255, 255, 255):
                 a = estimate_a(result_pixel[w + 1, h],
                                result_pixel[w, h + 1],

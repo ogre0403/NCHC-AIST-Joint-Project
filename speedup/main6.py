@@ -13,7 +13,7 @@ def do_job(width, height, tasks_to_accomplish, mp_arr):
                 raise queue.Empty exception if the queue is empty. 
                 queue(False) function would do the same task also.
             '''
-            start = tasks_to_accomplish.get_nowait()
+            (start, end) = tasks_to_accomplish.get_nowait()
         except Queue.Empty:
             break
         else:
@@ -22,8 +22,8 @@ def do_job(width, height, tasks_to_accomplish, mp_arr):
                 message to task_that_are_done queue
             '''
             b = np.frombuffer(mp_arr.get_obj(), dtype="uint8").reshape((height, width, 3))
-            for w in range(start * 100, (start + 1) * 100):
-                for h in range(start * 100, (start + 1) * 100):
+            for w in range(start, end):
+                for h in range(start, end):
                     b[h, w] = [0, 0, 0]
 
             print('done by ' + mp.current_process().name)
@@ -34,7 +34,6 @@ def main():
     im = Image.open('./light.jpg')
     width, height = im.size
     channel = 3
-    im.show()
     im2arr = np.array(im)
 
     im_reshape = im2arr.reshape(width * height * channel)
@@ -50,7 +49,7 @@ def main():
     processes = []
 
     for i in range(number_of_task):
-        tasks_to_accomplish.put(i)
+        tasks_to_accomplish.put((i * 100, (i + 1) * 100))
 
     # creating processes
     for w in range(number_of_processes):

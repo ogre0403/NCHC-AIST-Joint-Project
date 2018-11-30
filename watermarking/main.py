@@ -12,11 +12,11 @@ def main():
     p_prime = reversible.F_inverse(a, reversible.F(b, q))
     print "recovered pixel\t: %s" % (p_prime,)
 
-    watermarking_img = reversible.addWatermark("./light.jpg", "./logo.png")
+    watermarking_img = reversible.addWatermark("./light.jpg", "./logo.png", blk_height=200, blk_width=300)
     watermarking_img.show()
 
-    recovered_img = reversible.removeWatermark(watermarking_img, "./logo.png")
-    recovered_img.show()
+    # recovered_img = reversible.removeWatermark(watermarking_img, "./logo.png")
+    # recovered_img.show()
 
 
 if __name__ == "__main__":

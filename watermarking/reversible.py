@@ -77,7 +77,7 @@ def addWatermark(origin, watermark, blk_width=0, blk_height=0, proc_num=0):
 
     # creating processes for parallel processing
     for w in range(number_of_processes):
-        p = mp.Process(target=do_job, args=(width, height, tasks_to_accomplish, origin_arr, watermark))
+        p = mp.Process(target=AddWatermarkJob, args=(width, height, tasks_to_accomplish, origin_arr, watermark))
         processes.append(p)
         p.start()
 
@@ -91,7 +91,7 @@ def addWatermark(origin, watermark, blk_width=0, blk_height=0, proc_num=0):
     return arr2im
 
 
-def do_job(width, height, tasks_to_accomplish, mp_arr, watermark_path):
+def AddWatermarkJob(width, height, tasks_to_accomplish, mp_arr, watermark_path):
     water_img = Image.open(watermark_path)
 
     while True:
@@ -131,44 +131,32 @@ def do_job(width, height, tasks_to_accomplish, mp_arr, watermark_path):
     return True
 
 
-def addWatermarkBlock(start_wh, end_wh, watermark, origin_pixel, result_pixel):
-    width = end_wh[0] - start_wh[0] + 1
-    height = end_wh[1] - start_wh[1] + 1
-
-    watermark = Image.open(watermark).resize((width, height))
-    watermark_rgb = watermark.convert('RGB')
-
-    for w in range(start_wh[0], end_wh[0]):
-        result_pixel[w, end_wh[1]] = origin_pixel[w, end_wh[1]]
-
-    for h in range(start_wh[1], end_wh[1]):
-        result_pixel[end_wh[0], h] = origin_pixel[end_wh[0], h]
-
-    for h in range(start_wh[1], end_wh[1]):
-        for w in range(start_wh[0], end_wh[0]):
-            if watermark_rgb.getpixel((w - start_wh[0], h - start_wh[1])) != (255, 255, 255):
-                a = estimate_a(origin_pixel[w + 1, h],
-                               origin_pixel[w, h + 1],
-                               origin_pixel[w + 1, h + 1])
-
-                b = watermark_rgb.getpixel((w - start_wh[0], h - start_wh[1]))
-                result_pixel[w, h] = F_inverse(b, F(a, origin_pixel[w, h]))
-            else:
-                result_pixel[w, h] = origin_pixel[w, h]
-
-
-def removeWatermark(masked_image, watermark, blk_width=0, blk_height=0):
+def removeWatermark(masked_image, watermark, blk_width=0, blk_height=0, proc_num=0):
     width, height = masked_image.size
-    masked_pixel = masked_image.load()
+    channel = 3
 
-    result_image = Image.new('RGB', (width, height))
-    result_pixel = result_image.load()
+    origin_image_nparray = np.array(masked_image)
+    im_reshape = origin_image_nparray.reshape(width * height * channel)
+    origin_arr = mp.Array(c.c_uint8, width * height * channel)
+    arr = np.frombuffer(origin_arr.get_obj(), dtype="uint8")
+    b = arr.reshape(width * height * channel)
+    for x in range(width * height * channel):
+        b[x] = im_reshape[x]
 
     if blk_width == 0:
         blk_width = width
 
     if blk_height == 0:
         blk_height = height
+
+    # process number should not exceed cpu count
+    if proc_num <= 0 or proc_num > mp.cpu_count():
+        number_of_processes = mp.cpu_count()
+    else:
+        number_of_processes = proc_num
+
+    tasks_to_accomplish = mp.Queue()
+    processes = []
 
     # remove watermark block by block in generic form
     for x in range(width // blk_width + (width % blk_width > 0)):
@@ -183,32 +171,61 @@ def removeWatermark(masked_image, watermark, blk_width=0, blk_height=0):
 
             if y == (height // blk_height + (height % blk_height > 0) - 1):
                 end_y = height - 1
-            # todo: speedup by multiple process
-            removeWatermarkBlock((start_x, start_y), (end_x, end_y), watermark, masked_pixel, result_pixel)
 
-    return result_image
+            # add task to queue, speedup by multiple process
+            tasks_to_accomplish.put((start_x, start_y, end_x, end_y))
+
+    # creating processes for parallel processing
+    for w in range(number_of_processes):
+        p = mp.Process(target=RemoveWatermarkJob, args=(width, height, tasks_to_accomplish, origin_arr, watermark))
+        processes.append(p)
+        p.start()
+
+    # wait for process complete
+    for p in processes:
+        p.join()
+
+    # reshape 1-D shared array back to 2-D image
+    b = arr.reshape((height, width, channel))
+    arr2im = Image.fromarray(b)
+    return arr2im
 
 
-def removeWatermarkBlock(start_wh, end_wh, watermark_file, masked_pixel, result_pixel):
-    width = end_wh[0] - start_wh[0] + 1
-    height = end_wh[1] - start_wh[1] + 1
+def RemoveWatermarkJob(width, height, tasks_to_accomplish, mp_arr, watermark_path):
+    water_img = Image.open(watermark_path)
 
-    watermark = Image.open(watermark_file).resize((width, height))
-    watermark_rgb = watermark.convert('RGB')
+    while True:
+        try:
+            '''
+                try to get task from the queue. get_nowait() function will 
+                raise queue.Empty exception if the queue is empty. 
+                queue(False) function would do the same task also.
+            '''
+            (start_x, start_y, end_x, end_y) = tasks_to_accomplish.get_nowait()
 
-    for w in range(start_wh[0], end_wh[0]):
-        result_pixel[w, end_wh[1]] = masked_pixel[w, end_wh[1]]
+        except Queue.Empty:
+            break
+        else:
+            '''
+                if no exception has been raised, add the task completion 
+                message to task_that_are_done queue
+            '''
+            sub_width = end_x - start_x + 1
+            sub_height = end_y - start_y + 1
 
-    for h in range(start_wh[1], end_wh[1]):
-        result_pixel[end_wh[0], h] = masked_pixel[end_wh[0], h]
+            watermark_rgb = water_img.resize((sub_width, sub_height)).convert('RGB')
 
-    for h in range(end_wh[1] - 1, start_wh[1] - 1, -1):
-        for w in range(end_wh[0] - 1, start_wh[0] - 1, -1):
-            if watermark_rgb.getpixel((w - start_wh[0], h - start_wh[1])) != (255, 255, 255):
-                a = estimate_a(result_pixel[w + 1, h],
-                               result_pixel[w, h + 1],
-                               result_pixel[w + 1, h + 1])
-                b = watermark_rgb.getpixel((w - start_wh[0], h - start_wh[1]))
-                result_pixel[w, h] = F_inverse(a, F(b, masked_pixel[w, h]))
-            else:
-                result_pixel[w, h] = masked_pixel[w, h]
+            origin_pixel = np.frombuffer(mp_arr.get_obj(), dtype="uint8").reshape((height, width, 3))
+
+            for h in range(end_y - 1, start_y - 1, -1):
+                for w in range(end_x - 1, start_x - 1, -1):
+                    if watermark_rgb.getpixel((w - start_x, h - start_y)) != (255, 255, 255):
+                        a = estimate_a(origin_pixel[h, w + 1],
+                                       origin_pixel[h + 1, w],
+                                       origin_pixel[h + 1, w + 1])
+
+                        b = watermark_rgb.getpixel((w - start_x, h - start_y))
+                        origin_pixel[h, w] = F_inverse(a, F(b, origin_pixel[h, w]))
+                    else:
+                        origin_pixel[h, w] = origin_pixel[h, w]
+    return True

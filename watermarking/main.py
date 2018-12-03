@@ -7,16 +7,16 @@ def main():
     a = (3, 3, 3)
     b = (1, 1, 1)
 
-    print "origin pixel\t: %s" % (p,)
+    print("origin pixel\t: %s" % (p,))
     q = reversible.F_inverse(b, reversible.F(a, p))
-    print "watermark pixel\t: %s" % (q,)
+    print("watermark pixel\t: %s" % (q,))
     p_prime = reversible.F_inverse(a, reversible.F(b, q))
-    print "recovered pixel\t: %s" % (p_prime,)
+    print("recovered pixel\t: %s" % (p_prime,))
 
     start1 = time.time()
     watermarking_img = reversible.addWatermark("./light.jpg", "./logo.png", blk_height=200, blk_width=300, proc_num=4)
     end1 = time.time()
-    print end1 - start1
+    print(end1 - start1)
 
     watermarking_img.show()
 
@@ -24,7 +24,7 @@ def main():
     recovered_img = reversible.removeWatermark(watermarking_img, "./logo.png", blk_height=200, blk_width=300,
                                                proc_num=4)
     end2 = time.time()
-    print end2 - start2
+    print(end2 - start2)
 
     recovered_img.show()
 

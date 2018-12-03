@@ -1,7 +1,7 @@
 from PIL import Image
 import monotonic
 import multiprocessing as mp
-import Queue
+import queue as Queue
 import numpy as np
 import ctypes as c
 
@@ -125,7 +125,7 @@ def AddWatermarkJob(width, height, tasks_to_accomplish, mp_arr, watermark_path):
                                        origin_pixel[h + 1, w + 1])
 
                         b = watermark_rgb.getpixel((w - start_x, h - start_y))
-                        origin_pixel[h, w] = F_inverse(b, F(a, origin_pixel[h, w]))
+                        origin_pixel[h, w] = F_inverse(b, F(np.int_(a), origin_pixel[h, w]))
                     else:
                         origin_pixel[h, w] = origin_pixel[h, w]
     return True
@@ -225,7 +225,7 @@ def RemoveWatermarkJob(width, height, tasks_to_accomplish, mp_arr, watermark_pat
                                        origin_pixel[h + 1, w + 1])
 
                         b = watermark_rgb.getpixel((w - start_x, h - start_y))
-                        origin_pixel[h, w] = F_inverse(a, F(b, origin_pixel[h, w]))
+                        origin_pixel[h, w] = F_inverse(np.int_(a), F(b, origin_pixel[h, w]))
                     else:
                         origin_pixel[h, w] = origin_pixel[h, w]
     return True

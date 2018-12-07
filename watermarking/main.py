@@ -14,15 +14,14 @@ def main():
     print("recovered pixel\t: %s" % (p_prime,))
 
     start1 = time.time()
-    watermarking_img = reversible.addWatermark("./light.jpg", "./logo.png", blk_height=200, blk_width=300, proc_num=4)
+    watermarking_img = reversible.addWatermark("./light.jpg", "./logo.png", blk_height=200, blk_width=300)
     end1 = time.time()
     print(end1 - start1)
 
     watermarking_img.show()
 
     start2 = time.time()
-    recovered_img = reversible.removeWatermark(watermarking_img, "./logo.png", blk_height=200, blk_width=300,
-                                               proc_num=4)
+    recovered_img = reversible.removeWatermark(watermarking_img, "./logo.png", blk_height=200, blk_width=300)
     end2 = time.time()
     print(end2 - start2)
 

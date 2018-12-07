@@ -19,34 +19,15 @@ def F_inverse(x, q):
 
 
 def estimate_a(p1, p2, p3):
-    p = (
-        (p1[0] / 3) + (p2[0] / 3) + (p3[0] / 3),
-        (p1[1] / 3) + (p2[1] / 3) + (p3[1] / 3),
-        (p1[2] / 3) + (p2[2] / 3) + (p3[2] / 3)
-    )
-
-    return p
+    # p = (
+    #     (p1[0] / 3) + (p2[0] / 3) + (p3[0] / 3),
+    #     (p1[1] / 3) + (p2[1] / 3) + (p3[1] / 3),
+    #     (p1[2] / 3) + (p2[2] / 3) + (p3[2] / 3)
+    # )
+    return p1
 
 
 def addWatermark(origin, watermark, blk_width=0, blk_height=0, proc_num=0):
-    origin_image = Image.open(origin)
-    width, height = origin_image.size
-    channel = 3
-
-    origin_image_nparray = np.array(origin_image)
-    im_reshape = origin_image_nparray.reshape(width * height * channel)
-    origin_arr = mp.Array(c.c_uint8, width * height * channel)
-    arr = np.frombuffer(origin_arr.get_obj(), dtype="uint8")
-    b = arr.reshape(width * height * channel)
-    for x in range(width * height * channel):
-        b[x] = im_reshape[x]
-
-    if blk_width == 0:
-        blk_width = width
-
-    if blk_height == 0:
-        blk_height = height
-
     # process number should not exceed cpu count
     if proc_num <= 0 or proc_num > mp.cpu_count():
         number_of_processes = mp.cpu_count()
@@ -55,6 +36,41 @@ def addWatermark(origin, watermark, blk_width=0, blk_height=0, proc_num=0):
 
     tasks_to_accomplish = mp.Queue()
     processes = []
+
+    origin_image = Image.open(origin)
+    width, height = origin_image.size
+    channel = 3
+
+    origin_image_nparray = np.array(origin_image)
+    im_reshape = origin_image_nparray.reshape(width * height * channel)
+    origin_arr = mp.Array(c.c_uint8, width * height * channel)
+    arr = np.frombuffer(origin_arr.get_obj(), dtype="uint8")
+
+    # time consuming loop, speedup by multiple processes
+    total = width * height * channel
+    j = total // number_of_processes
+
+    for x in range(number_of_processes):
+        tasks_to_accomplish.put((x * j, (x + 1) * j))
+
+    # creating processes for parallel processing
+    for w in range(number_of_processes):
+        p = mp.Process(target=copyImageJob, args=(tasks_to_accomplish, origin_arr, im_reshape))
+        processes.append(p)
+        p.start()
+
+    # wait for process complete
+    for p in processes:
+        p.join()
+
+    # clear process queue
+    processes.clear()
+
+    if blk_width == 0:
+        blk_width = width
+
+    if blk_height == 0:
+        blk_height = height
 
     # add watermark block by block in generic form
     # ref: https://stackoverflow.com/questions/2356501/how-do-you-round-up-a-number-in-python
@@ -132,23 +148,6 @@ def AddWatermarkJob(width, height, tasks_to_accomplish, mp_arr, watermark_path):
 
 
 def removeWatermark(masked_image, watermark, blk_width=0, blk_height=0, proc_num=0):
-    width, height = masked_image.size
-    channel = 3
-
-    origin_image_nparray = np.array(masked_image)
-    im_reshape = origin_image_nparray.reshape(width * height * channel)
-    origin_arr = mp.Array(c.c_uint8, width * height * channel)
-    arr = np.frombuffer(origin_arr.get_obj(), dtype="uint8")
-    b = arr.reshape(width * height * channel)
-    for x in range(width * height * channel):
-        b[x] = im_reshape[x]
-
-    if blk_width == 0:
-        blk_width = width
-
-    if blk_height == 0:
-        blk_height = height
-
     # process number should not exceed cpu count
     if proc_num <= 0 or proc_num > mp.cpu_count():
         number_of_processes = mp.cpu_count()
@@ -157,6 +156,40 @@ def removeWatermark(masked_image, watermark, blk_width=0, blk_height=0, proc_num
 
     tasks_to_accomplish = mp.Queue()
     processes = []
+
+    width, height = masked_image.size
+    channel = 3
+
+    origin_image_nparray = np.array(masked_image)
+    im_reshape = origin_image_nparray.reshape(width * height * channel)
+    origin_arr = mp.Array(c.c_uint8, width * height * channel)
+    arr = np.frombuffer(origin_arr.get_obj(), dtype="uint8")
+
+    # time consuming loop, speedup by multiple processes
+    total = width * height * channel
+    j = total // number_of_processes
+
+    for x in range(number_of_processes):
+        tasks_to_accomplish.put((x * j, (x + 1) * j))
+
+    # creating processes for parallel processing
+    for w in range(number_of_processes):
+        p = mp.Process(target=copyImageJob, args=(tasks_to_accomplish, origin_arr, im_reshape))
+        processes.append(p)
+        p.start()
+
+    # wait for process complete
+    for p in processes:
+        p.join()
+
+    # clear process queue
+    processes.clear()
+
+    if blk_width == 0:
+        blk_width = width
+
+    if blk_height == 0:
+        blk_height = height
 
     # remove watermark block by block in generic form
     for x in range(width // blk_width + (width % blk_width > 0)):
@@ -228,4 +261,18 @@ def RemoveWatermarkJob(width, height, tasks_to_accomplish, mp_arr, watermark_pat
                         origin_pixel[h, w] = F_inverse(np.int_(a), F(b, origin_pixel[h, w]))
                     else:
                         origin_pixel[h, w] = origin_pixel[h, w]
+    return True
+
+
+def copyImageJob(tasks_to_accomplish, dst, src):
+    while True:
+        try:
+            (start, end) = tasks_to_accomplish.get_nowait()
+
+        except Queue.Empty:
+            break
+        else:
+            origin_pixel = np.frombuffer(dst.get_obj(), dtype="uint8")
+            for x in range(start, end):
+                origin_pixel[x] = src[x]
     return True
